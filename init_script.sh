@@ -37,3 +37,25 @@ for NODE in "${NODES[@]}"; do
             ;;
     esac
 done
+
+
+# Iterate over nodes and run vcmd commands for custom initialization commands
+for NODE in "${NODES[@]}"; do
+    case $NODE in
+        "n1"|"n2"|"n3"|"n4"|"n5"|"n6"|"n7"|"n8"|"n9"|"n10")
+            vcmd -c "/tmp/pycore.${PROCESS_ID}/${NODE}" -- bash -c "
+                $CUSTOM_COMMAND_INIT_NODE
+                "
+            ;;
+        "n11"|"n12"|"n13"|"n14"|"n15"|"n16")
+            vcmd -c "/tmp/pycore.${PROCESS_ID}/${NODE}" -- bash -c "
+                $CUSTOM_COMMAND_INIT_CLIENT
+                "
+            ;;
+        "n17")
+            vcmd -c "/tmp/pycore.${PROCESS_ID}/${NODE}" -- bash -c "
+                $CUSTOM_COMMAND_INIT_SERVER
+                "
+            ;;
+    esac
+done
