@@ -1,30 +1,32 @@
 import socket
 import sys
 
-# Create a TCP/IP socket
-sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+def send_content_request(node_ip):
+    try:
+        client_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        client_socket.connect((node_ip, 5000))  # Assuming port 5000 for connections
+        print(f"Connected to Node at {node_ip}")
 
-# Connect the socket to the port where the server is listening
-server_address = ('10.0.10.10', 8000)
-print >>sys.stderr, 'connecting to %s port %s' % server_address
-sock.connect(server_address)
+        while True:
+            content_request = input("Enter content request (or 'exit' to quit): ")
+            if content_request.lower() == 'exit':
+                break
 
-try:
+            client_socket.sendall(content_request.encode())
 
-    # Send data
-    message = 'This is the message.  It will be repeated.'
-    print >>sys.stderr, 'sending "%s"' % message
-    sock.sendall(message)
+            # Receive and print the content from the node
+            data = client_socket.recv(1024)
+            print(f"Received content: {data.decode()}")
 
-    # Look for the response
-    amount_received = 0
-    amount_expected = len(message)
+    except Exception as e:
+        print(f"Error: {e}")
+    finally:
+        client_socket.close()
 
-    while amount_received < amount_expected:
-        data = sock.recv(16)
-        amount_received += len(data)
-        print >>sys.stderr, 'received "%s"' % data
+if __name__ == "__main__":
+    if len(sys.argv) != 2:
+        print("Usage: python client.py <node_ip>")
+        sys.exit(1)
 
-finally:
-    print >>sys.stderr, 'closing socket'
-    sock.close()
+    node_ip = sys.argv[1]
+    send_content_request(node_ip)

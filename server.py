@@ -1,36 +1,32 @@
 import socket
 import sys
 
-# Create a TCP/IP socket
-sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-
-# Bind the socket to the port
-server_address = ('10.0.10.10', 8000)
-print >>sys.stderr, 'starting up on %s port %s' % server_address
-sock.bind(server_address)
-
-# Listen for incoming connections
-sock.listen(1)
-
-while True:
-    # Wait for a connection
-    print >>sys.stderr, 'waiting for a connection'
-    connection, client_address = sock.accept()
-
+def connect_to_node(node_ip):
     try:
-        print >>sys.stderr, 'connection from', client_address
+        server_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        server_socket.connect((node_ip, 5000))  # Assuming port 5000 for connections
+        print(f"Connected to Node at {node_ip}")
 
-        # Receive the data in small chunks and retransmit it
         while True:
-            data = connection.recv(16)
-            print >>sys.stderr, 'received "%s"' % data
-            if data:
-                print >>sys.stderr, 'sending data back to the client'
-                connection.sendall(data)
-            else:
-                print >>sys.stderr, 'no more data from', client_address
+            content_request = input("Enter content request (or 'exit' to quit): ")
+            if content_request.lower() == 'exit':
                 break
 
+            server_socket.sendall(content_request.encode())
+
+            # Receive and print the content from the node
+            data = server_socket.recv(1024)
+            print(f"Received content: {data.decode()}")
+
+    except Exception as e:
+        print(f"Error: {e}")
     finally:
-        # Clean up the connection
-        connection.close()
+        server_socket.close()
+
+if __name__ == "__main__":
+    if len(sys.argv) != 2:
+        print("Usage: python server_connect.py <node_ip>")
+        sys.exit(1)
+
+    node_ip = sys.argv[1]
+    connect_to_node(node_ip)
