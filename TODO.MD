@@ -11,3 +11,6 @@
 - O RP Devera ser capaz de iniciar uma stream multicast do conteudo unicast que esta a receber do servidor
 - Para alem das funcionalidades de um nodo normal
 - Devera conhecer o melhor caminho para a stream em termos de metrica (tempo de resposta, perda de pacotes, etc) e quais os nodos que tambem estao a fazer stream desse conteudo
+
+
+[]: 
