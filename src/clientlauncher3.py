@@ -15,7 +15,8 @@ if __name__ == "__main__":
 	try:
 		serverAddr = sys.argv[1]
 		serverPort = sys.argv[2]
-		fileName = sys.argv[3]	
+		rtpPort = sys.argv[3]
+		fileName = sys.argv[4]	
 	except:
 		print("[Usage: ClientLauncher.py Server_name Server_port RTP_port Video_file]\n")	
 	
@@ -39,7 +40,7 @@ if __name__ == "__main__":
 		response = client_socket.recv(1024).decode()
 		print(f"Received response from the server: {response}")
 
-		# Split the response into server port and rtp port
+		# Split the response into server port
 		new_server_port = int(response)
 		print(f"New server port: {new_server_port}")
 		# Close the socket
@@ -49,7 +50,7 @@ if __name__ == "__main__":
 		root = Tk()
 		print("Created root.")
 		# Create a new client
-		app = Client(root, serverAddr, new_server_port, new_server_port, fileName)
+		app = Client(root, serverAddr, new_server_port, rtpPort, fileName)
 		print("Created client.")
 		app.master.title("RTPClient")	
 		print("Set title.")

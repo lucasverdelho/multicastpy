@@ -19,16 +19,29 @@ class ServerWorker:
 	FILE_NOT_FOUND_404 = 1
 	CON_ERR_500 = 2
 	
+	serverPort = 0
 	clientInfo = {}
 	
-	def __init__(self, clientInfo):
-		self.clientInfo = clientInfo
+	def __init__(self, serverPort):
+		self.serverPort = serverPort
+		print("Created server worker.")
+		print(f"Server port: {self.serverPort}")
 		
 	def run(self):
-		threading.Thread(target=self.recvRtspRequest).start()
+		# threading.Thread(target=self.recvRtspRequest).start()
+		# Create new socket, bind to serverport and accept client connection
+		rtspSocket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+		rtspSocket.bind(('', self.serverPort))
+		rtspSocket.listen(5)
+		print("Listening for connections...")
+		clientInfo = {}
+		clientInfo['rtspSocket'] = rtspSocket.accept()
+		print("Client connected.")
+		self.clientInfo = clientInfo
+		self.recvRtspRequest()
 	
 	def recvRtspRequest(self):
-		"""Receive RTSP request from the client."""
+		# Receive Request from the Client
 		connSocket = self.clientInfo['rtspSocket'][0]
 		while True:            
 			data = connSocket.recv(256)

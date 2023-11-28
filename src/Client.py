@@ -35,6 +35,7 @@ class Client:
 		self.connectToServer()
 		self.frameNbr = 0
 		
+		
 	def createWidgets(self):
 		"""Build GUI."""
 		# Create Setup button
@@ -136,6 +137,7 @@ class Client:
 		"""Connect to the Server. Start a new RTSP/TCP session."""
 		self.rtspSocket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 		try:
+			print('\nConnecting to server on port ' + str(self.serverPort) + '...')
 			self.rtspSocket.connect((self.serverAddr, self.serverPort))
 		except:
 			tkMessageBox.showwarning('Connection Failed', 'Connection to \'%s\' failed.' %self.serverAddr)

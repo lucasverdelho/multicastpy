@@ -35,7 +35,6 @@ class Server:
         while True:
 
             # 2. Wait for a client to connect
-            print("Waiting for a client to connect...")
             client_socket, client_address = rtspSocket.accept()
             print(f"Client connected: {client_address}")
             new_server_port = self.find_available_port()
@@ -51,14 +50,13 @@ class Server:
             #    creating a new RTSP session for each client generating
             #    a new port for the RTP session
             response_msg = f"{new_server_port}"
-            print(f"Sending response to the client: {response_msg}")
             client_socket.send(response_msg.encode())
-            print("Response sent to the client.")
 
             # 4. Create a new thread to handle the client
             threading.Thread(target=self.handle_client, args=(new_server_port, client_socket, client_address)).start()
-            print("Thread started.")
 
+            # 5. Close the client socket
+            client_socket.close()
 
 
     def find_available_port(self):
@@ -78,7 +76,7 @@ class Server:
     def handle_client(self, new_server_port, client_socket, client_address):
         try:
             # Pass the client socket and new server port to the ServerWorker
-            server_worker_instance = ServerWorker({'rtspSocket': (client_socket, client_address), 'serverPort': new_server_port})
+            server_worker_instance = ServerWorker(new_server_port)
             server_worker_instance.run()
 
         except Exception as e:
