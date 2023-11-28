@@ -55,16 +55,13 @@ class Server:
             client_socket.send(response_msg.encode())
             print("Response sent to the client.")
 
+            # 4. Create a new thread to handle the client
+            threading.Thread(target=self.handle_client, args=(new_server_port, client_socket, client_address)).start()
+            print("Thread started.")
 
-
-            # threading.Thread(target=self.handle_client, args=(new_server_port, client_socket, client_address)).start()
-
-            client_socket.close()
 
 
     def find_available_port(self):
-        # This function can be used to find an available port for the RTP session
-        # You can modify this based on your requirements
         try:
             temp_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
             temp_socket.bind(('localhost', 0))  # Bind to an available port on localhost
@@ -80,11 +77,6 @@ class Server:
 
     def handle_client(self, new_server_port, client_socket, client_address):
         try:
-            # Send the new server port to the client
-            response_msg = f"{new_server_port}"
-            print(f"Sending response to the client: {response_msg}")
-            client_socket.send(response_msg.encode())
-
             # Pass the client socket and new server port to the ServerWorker
             server_worker_instance = ServerWorker({'rtspSocket': (client_socket, client_address), 'serverPort': new_server_port})
             server_worker_instance.run()

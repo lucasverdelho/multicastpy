@@ -27,9 +27,6 @@ if __name__ == "__main__":
 		client_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 		print("Created socket.")
 
-		# After creating the socket
-		client_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-
 		# Connect to the server
 		client_socket.connect((serverAddr, int(serverPort)))
 
@@ -44,15 +41,18 @@ if __name__ == "__main__":
 
 		# Split the response into server port and rtp port
 		new_server_port = int(response)
-
+		print(f"New server port: {new_server_port}")
 		# Close the socket
 		client_socket.close()
+		print("Closed socket.")
 
 		root = Tk()
-	
+		print("Created root.")
 		# Create a new client
 		app = Client(root, serverAddr, new_server_port, new_server_port, fileName)
+		print("Created client.")
 		app.master.title("RTPClient")	
+		print("Set title.")
 		root.mainloop()
 
 	except:
