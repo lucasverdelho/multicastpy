@@ -13,4 +13,5 @@
 - Devera conhecer o melhor caminho para a stream em termos de metrica (tempo de resposta, perda de pacotes, etc) e quais os nodos que tambem estao a fazer stream desse conteudo
 
 
-[]: 
+[]: mudar o bash para iniciar cada Nodo do overlay apenas com os nodes vizinhos
+[]: Servidor tem que iniciar conexao com o RP enviando uma lista de conteudo e ficar a escuta por pedidos de conteudo

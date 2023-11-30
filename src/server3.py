@@ -44,7 +44,6 @@ class Server:
             # Wait until there is data available to be received
 
             request = client_socket.recv(1024).decode()
-            print(f"Received request from the client: {request}")
 
             # 3. Send the new server port and new rtp port to the client
             #    creating a new RTSP session for each client generating
