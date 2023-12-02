@@ -3,6 +3,10 @@ import threading
 import time
 
 class Node:
+
+
+    
+
     def main(self, node_id, port):
         self.node_id = node_id
         self.port = port
