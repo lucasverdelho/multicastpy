@@ -33,7 +33,7 @@ class NodeRP:
             # Send a request to the server
             request_msg = "CONTENT_INFO_REQUEST"
             nodeServerSocket.send(request_msg.encode())
-            print("Sent CONNECT_REQUEST to the server.")
+            print("Sent CONTENT_INFO_REQUEST to the server.")
 
             # Receive the content list from the server
             response = nodeServerSocket.recv(1024).decode()
