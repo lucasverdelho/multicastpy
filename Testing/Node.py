@@ -7,6 +7,7 @@ class Node:
     vizinhos = [] #(address:port)
     ip_rp = "0.0.0.0:5000"
     streaming_content = {} # (content_name, receiving_socket)
+    rp_neighbour
 
     
     def main(self):
@@ -19,6 +20,12 @@ class Node:
 
         self.vizinhos = self.read_ips_from_file(NODE_NUMBER)
         
+        # Check if we are connected to the RP and if so set rp_neighbour to True
+        if self.ip_rp in self.vizinhos:
+            self.rp_neighbour = True
+        else:
+            self.rp_neighbour = False
+
         # 1. Create a permanent listening loop for the RTSP socket
         nodeServerSocket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         nodeServerSocket.bind(('', NODE_PORT))
@@ -83,9 +90,40 @@ class Node:
             print(f"Invalid request: {request}")
         
 
+    def content_request(self, requesting_address, socket):
+        print(f"Requesting content from {requesting_address}")
+        # 1. Receive the content name
+        content_name = socket.recv(1024).decode()
+        print(f"Content name: {content_name}")
 
+        # 2. Check if the node has the content
+        if content_name in self.streaming_content:
+            print("Node has the content")
 
+        # 3. If not, check if we are connected to the RP
+        elif self.rp_neighbour:
+            print("Node is connected to the RP")
+            # 3.1. If so, send the request to the RP
+            self.send_request_to_rp(content_name, socket)
 
+        # 4. If not, locate the RP
+        else:
+            print("Node is not connected to the RP")
+            # 4.1. Send a request to the neighbours to locate the RP
+            self.locate_rp(requesting_address, socket)
+
+        
+        def locate_rp(self, requesting_address, socket):
+            print(f"Locating RP from {requesting_address}")
+            # 1. Send a request to the neighbours to locate the RP
+            for neighbour in self.vizinhos:
+                # 1.1. Create a new socket to send the request
+                neighbour_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+                neighbour_socket.connect(neighbour)
+                # 1.2. Send the request
+                neighbour_socket.send("LOCATE_RP".encode())
+                # 1.3. Close the socket
+                neighbour_socket.close()
 
 
 if __name__ == "__main__":
