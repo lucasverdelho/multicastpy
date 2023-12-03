@@ -8,7 +8,7 @@ class Node:
     ip_rp = "0.0.0.0:5000"
     streaming_content = {} # (content_name, receiving_socket)
     rp_neighbour = False
-
+    path_to_rp = [] # (address:port) (Esta porta tem que ser a porta listening do node aka a porta na lista de neighbours)
     
     def main(self):
         print("Starting Node...")
@@ -73,29 +73,37 @@ class Node:
             print("Error finding available port.")
             return None
 
-
+ 
     def handle_request(self, new_server_port, requesting_address, request):
 
         socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         socket.connect((requesting_address, new_server_port))
 
+        # 1. Check the request type
+        request_type = request.split(";;")[0]
 
-        if request == "CONTENT_REQUEST":
-            content_name = request.split("-")[1]
-            self.content_request(requesting_address, socket, content_name)
+        if request_type == "CLIENT_REQUEST":
+            content_name = request.split(";;")[1]
+            self.client_request(requesting_address, socket, content_name)
 
         # A logica aqui nao esta bem, isto nao funciona em casos de maior profundidade
-        elif request == "LOCATE_RP":
+        elif request_type == "LOCATE_RP":
             connected_neighbour = self.locate_rp(requesting_address, socket)
-            # 2. Send the address of the connected neighbour to the requesting node
             socket.send(connected_neighbour.encode())
+
+        elif request_type == "REDIRECT_STREAM":
+            self.redirect_stream(requesting_address, socket, request)
+
+        elif request_type == "REQUEST_STREAM":
+            self.request_stream(requesting_address, socket, request)
+
         else:
             print(f"Invalid request: {request}")
         
 
 
 
-    def content_request(self, requesting_address, socket, content_name):
+    def client_request(self, requesting_address, socket, content_name):
         print(f"Requesting content from {requesting_address}")
 
         # 1. Check if the node is currently streaming the content
@@ -117,7 +125,8 @@ class Node:
             self.send_request_to_rp(content_name, socket, connected_neighbour) 
 
 
-      
+    # Vai construir um caminho de ips até ao RP
+    # Quando receber uma resposta vai dar append do seu ip ao caminho e reencaminhar a resposta para o node anterior
     def locate_rp(self, requesting_address, socket):
         print(f"Locating RP from {requesting_address}")
         # 1. Send a request to the neighbours to locate the RP
@@ -153,6 +162,14 @@ class Node:
         rp_socket.close()
 
 
+    # Vai encaminhar os pacotes recebidos para o node seguinte no caminho recebido no pacote, acrescentando 1 ao contador de hops
+    def redirect_stream(self, requesting_address, socket, request):
+        pass
+
+    # Vai encaminhar o pedido para o node seguinte no caminho para o RP acrescentando 1 ao contador de hops
+    # O ultimo nodo sera responsavel por enviar o pedido ao RP
+    def request_stream(self, requesting_address, socket, request):
+        pass
 
 if __name__ == "__main__":
     (Node()).main()
