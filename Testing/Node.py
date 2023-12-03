@@ -4,7 +4,7 @@ import socket
 
 class Node:
 
-    vizinhos = {} #(id, address:port)
+    vizinhos = [] #(address:port)
     ip_rp = "0.0.0.0:5000"
     streaming_content = {} # (content_name, receiving_socket)
 
@@ -19,26 +19,34 @@ class Node:
 
         self.vizinhos = self.read_ips_from_file(NODE_NUMBER)
         
-        threading.Thread(target=self.create_listening_sockets).start()
+        # 1. Create a permanent listening loop for the RTSP socket
+        nodeServerSocket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        nodeServerSocket.bind(('', NODE_PORT))
+        nodeServerSocket.listen(5)
 
-        
-    def create_listening_sockets(self):
-        #creates the sockets that will listen to the other nodes
-        for i in range(len(self.vizinhos)):
-            nodeServerSocket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-            nodeServerSocket.bind(('', 6000 + i))
-            nodeServerSocket.listen(5)
-            threading.Thread(target=self.handle_node_communication, args=(nodeServerSocket,)).start()
-    
-
-    def handle_node_communication(self, nodeServerSocket):
-        #handles the communication between nodes
+        # MAIN LISTEN LOOP
+        # Cria uma nova thread para cada requesição
         while True:
-            request_socket, request_address = nodeServerSocket.accept()
-            print(f"Request connected: {request_address}")
-            self.handle_request(request_address, request_socket)
-            request_socket.close()
-            
+
+            # 2. Wait for any connection request
+            requesting_socket, requesting_address = nodeServerSocket.accept()
+            print(f"Requesting socket connected: {requesting_address}")
+
+            request = requesting_socket.recv(1024).decode()
+
+            # 3. Create new port for the new communication socket and send it back to the requesting node
+            new_server_port = self.find_available_port()
+            print(f"New server port: {new_server_port}")
+            response_msg = f"{new_server_port}"
+            requesting_socket.send(response_msg.encode())
+
+            # 4. Create a new thread to handle the client
+            threading.Thread(target=self.handle_request, args=(new_server_port, requesting_address, request)).start()
+
+            # 5. Close the client socket
+            requesting_socket.close()
+
+
 
     def read_ips_from_file(self, NODE_NUMBER):
         #reads the ips of the neighnouring nodes
@@ -46,6 +54,36 @@ class Node:
         with open(filename) as f:
             for line in f: #each line will be the ip of the neighnours
                 self.neighbours.append()
+
+
+    def find_available_port(self):
+        try:
+            temp_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+            temp_socket.bind(('localhost', 0))  # Bind to an available port on localhost
+            temp_socket.listen(1)
+            port = temp_socket.getsockname()[1]
+            temp_socket.close()
+            return port
+        except socket.error:
+            print("Error finding available port.")
+            return None
+
+
+    def handle_request(self, new_server_port, requesting_address, request):
+
+        socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        socket.connect((requesting_address, new_server_port))
+
+
+        if request == "CONTENT_REQUEST":
+            self.content_request(requesting_address, socket)
+        elif request == "LOCATE_RP":
+            self.locate_rp(requesting_address, socket)
+        else:
+            print(f"Invalid request: {request}")
+        
+
+
 
 
 
