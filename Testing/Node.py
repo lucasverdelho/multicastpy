@@ -18,7 +18,7 @@ class Node:
         except (IndexError, ValueError):
             print("[Usage: Node.py node_port node_number]\n")
 
-        self.neighbours = self.read_ips_from_file(NODE_NUMBER)
+        self.read_ips_from_file(NODE_NUMBER)
         
         # Check if we are connected to the RP and if so set rp_neighbour to True
         if self.ip_rp in self.neighbours:
@@ -30,18 +30,18 @@ class Node:
         nodeServerSocket.listen(5)
 
         # MAIN LISTEN LOOP
-        # Cria uma nova thread para cada requesição
+        # Cria uma nova thread para cada requesicao
         while True:
 
             # 2. Wait for any connection request
             requesting_socket, requesting_address = nodeServerSocket.accept()
-            print(f"Requesting socket connected: {requesting_address}")
+            print("Requesting socket connected: {}".format(requesting_address))
 
             request = requesting_socket.recv(1024).decode()
 
             # 3. Create new port for the new communication socket and send it back to the requesting node
             new_server_port = self.find_available_port()
-            print(f"New server port: {new_server_port}")
+            print("New server port: {}".format(new_server_port))
             response_msg = f"{new_server_port}"
             requesting_socket.send(response_msg.encode())
 
@@ -55,10 +55,10 @@ class Node:
 
     def read_ips_from_file(self, NODE_NUMBER):
         #reads the ips of the neighnouring nodes
-        filename = "node" + NODE_NUMBER + ".txt"
+        filename = "node" + str(NODE_NUMBER) + ".txt"
         with open(filename) as f:
             for line in f: #each line will be the ip of the neighnours
-                self.neighbours.append()
+                self.neighbours.append(line)
 
 
     def find_available_port(self):
