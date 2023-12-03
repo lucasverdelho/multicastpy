@@ -13,9 +13,8 @@ class NodeRP:
         print("Starting RP Node")
         try:
             NODE_PORT = int(sys.argv[1])
-            NODE_NUMBER = int(sys.argv[2])
         except (IndexError, ValueError):
-            print("[Usage: Node.py node_port node_number]\n")
+            print("[Usage: Node.py node_port]\n")
 
         self.read_ips_from_file()
         self.read_servers_from_file()
@@ -25,36 +24,39 @@ class NodeRP:
         nodeServerSocket.bind(('', NODE_PORT))
         nodeServerSocket.listen(5)
 
-        # Primeiro comunicar com os servidores e estabelecer os conteudos que cada um tem
-        for server in self.serverIPs:
-            # Create a new socket for each server connection
-            server_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        # # Primeiro comunicar com os servidores e estabelecer os conteudos que cada um tem
+        # for server in self.serverIPs:
+        #     # Create a new socket for each server connection
+        #     server_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 
-            try:
-                # Connect to the server
-                server_socket.connect((server, 6000))
+        #     try:
+        #         # Connect to the server
+        #         server_socket.connect((server, 6000))
 
-                # Send a request to the server
-                request_msg = "CONTENT_INFO_REQUEST"
-                server_socket.send(request_msg.encode())
-                print(f"Sent CONTENT_INFO_REQUEST to the server {server}.")
+        #         # Send a request to the server
+        #         request_msg = "CONTENT_INFO_REQUEST"
+        #         server_socket.send(request_msg.encode())
+        #         print(f"Sent CONTENT_INFO_REQUEST to the server {server}.")
 
-                # Receive the content list from the server
-                response = server_socket.recv(1024).decode()
-                print(f"Received response from the server {server}: {response}")
+        #         # Receive the content list from the server
+        #         response = server_socket.recv(1024).decode()
+        #         print(f"Received response from the server {server}: {response}")
 
-                # Add the content to the content list
-                self.content[server] = response
+        #         # Add the content to the content list
+        #         self.content[server] = response
 
-            except Exception as e:
-                print(f"Error connecting to server {server}: {e}")
+        #     except Exception as e:
+        #         print(f"Error connecting to server {server}: {e}")
 
-            finally:
-                # Close the socket for this server connection
-                server_socket.close()
-                print(f"Closed socket for server {server}.")
+        #     finally:
+        #         # Close the socket for this server connection
+        #         server_socket.close()
+        #         print(f"Closed socket for server {server}.")
 
 
+
+        ## TEMORARILY ADD CONTENT TO THE CONTENT LIST MANUALLY
+        self.content["localhost:6000"] = ["movie1.Mjpg"]
 
         # MAIN LISTEN LOOP
         # Cria uma nova thread para cada requesição
