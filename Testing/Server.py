@@ -98,7 +98,8 @@ class Server:
         try:
             requests = request.split(";;")
             print(f"Request: {requests}")
-            if requests[0] == "CONTENT_REQUEST":
+            if requests[0] == "REQUEST_STREAM":
+                print("Initiating server worker...")
                 # Pass the client socket and new server port to the ServerWorker
                 server_worker_instance = ServerWorker(new_server_port)
                 server_worker_instance.run()

@@ -2,6 +2,7 @@ import threading
 import socket
 import sys
 import time
+import NodeRPWorker 
 
 class NodeRP:
 
@@ -159,6 +160,24 @@ class NodeRP:
             # Send a request to the server
             request_msg = f"REQUEST_STREAM;;{content_name}"
             server_socket.send(request_msg.encode())
+
+            # Receive the new port from the server
+            response = server_socket.recv(1024).decode()
+            print(f"Received response from the server: {response}")
+
+            # Split the response into server port
+            new_server_port = int(response)
+            
+            # Close the socket
+            server_socket.close()
+
+            time.sleep(2)
+
+            # Connect to the new port
+            new_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+            print("connecting to the new port " + str(new_server_port))
+            new_socket.connect((server, new_server_port))
+
 
 
         # else:
