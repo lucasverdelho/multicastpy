@@ -4,10 +4,10 @@ import socket
 
 class Node:
 
-    vizinhos = [] #(address:port)
+    neighbours = [] #(address:port)
     ip_rp = "0.0.0.0:5000"
     streaming_content = {} # (content_name, receiving_socket)
-    rp_neighbour
+    rp_neighbour = False
 
     
     def main(self):
@@ -18,13 +18,11 @@ class Node:
         except (IndexError, ValueError):
             print("[Usage: Node.py node_port node_number]\n")
 
-        self.vizinhos = self.read_ips_from_file(NODE_NUMBER)
+        self.neighbours = self.read_ips_from_file(NODE_NUMBER)
         
         # Check if we are connected to the RP and if so set rp_neighbour to True
-        if self.ip_rp in self.vizinhos:
+        if self.ip_rp in self.neighbours:
             self.rp_neighbour = True
-        else:
-            self.rp_neighbour = False
 
         # 1. Create a permanent listening loop for the RTSP socket
         nodeServerSocket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
@@ -50,7 +48,7 @@ class Node:
             # 4. Create a new thread to handle the client
             threading.Thread(target=self.handle_request, args=(new_server_port, requesting_address, request)).start()
 
-            # 5. Close the client socket
+            # 5. Close the socket
             requesting_socket.close()
 
 
@@ -116,14 +114,18 @@ class Node:
         def locate_rp(self, requesting_address, socket):
             print(f"Locating RP from {requesting_address}")
             # 1. Send a request to the neighbours to locate the RP
-            for neighbour in self.vizinhos:
+            for neighbour in self.neighbours:
                 # 1.1. Create a new socket to send the request
                 neighbour_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
                 neighbour_socket.connect(neighbour)
                 # 1.2. Send the request
                 neighbour_socket.send("LOCATE_RP".encode())
-                # 1.3. Close the socket
-                neighbour_socket.close()
+                # 1.3. Wait for the response
+                response = neighbour_socket.recv(1024).decode()
+                
+
+
+            
 
 
 if __name__ == "__main__":
