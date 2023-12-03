@@ -74,7 +74,7 @@ class Server:
             client_socket.send(response_msg.encode())
 
             # 4. Create a new thread to handle the client
-            threading.Thread(target=self.handle_client, args=(new_server_port, client_socket, client_address)).start()
+            threading.Thread(target=self.handle_client, args=(new_server_port, client_socket, client_address, request)).start()
 
             # 5. Close the client socket
             client_socket.close()
@@ -94,16 +94,31 @@ class Server:
 
 
 
-    def handle_client(self, new_server_port, client_socket, client_address):
+    def handle_client(self, new_server_port, client_socket, client_address, request):
         try:
-            # Pass the client socket and new server port to the ServerWorker
-            server_worker_instance = ServerWorker(new_server_port)
-            server_worker_instance.run()
+            requests = request.split(";;")
+            print(f"Request: {requests}")
+            if requests[0] == "CONTENT_REQUEST":
+                # Pass the client socket and new server port to the ServerWorker
+                server_worker_instance = ServerWorker(new_server_port)
+                server_worker_instance.run()
 
         except Exception as e:
             print(f"Error handling client on new port: {e}")
         finally:
             client_socket.close()
+
+
+    # def handle_client(self, new_server_port, client_socket, client_address):
+    #     try:
+    #         # Pass the client socket and new server port to the ServerWorker
+    #         server_worker_instance = ServerWorker(new_server_port)
+    #         server_worker_instance.run()
+
+    #     except Exception as e:
+    #         print(f"Error handling client on new port: {e}")
+    #     finally:
+    #         client_socket.close()
 
 
 if __name__ == "__main__":

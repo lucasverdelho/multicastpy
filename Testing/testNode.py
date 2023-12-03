@@ -1,5 +1,6 @@
 import socket
 import sys
+import time
 
 def send_content_request(node_ip, node_port, content_name):
     # Create a socket to connect to the RPNode
@@ -7,7 +8,7 @@ def send_content_request(node_ip, node_port, content_name):
 
     try:
         # Connect to the RPNode
-        client_socket.connect((node_ip, node_port))
+        client_socket.connect(('127.0.0.1', node_port))
 
         # Send a CONTENT_REQUEST
         request_msg = f"CONTENT_REQUEST;;{content_name}"
@@ -15,15 +16,29 @@ def send_content_request(node_ip, node_port, content_name):
         print(f"Sent CONTENT_REQUEST to the RPNode at {node_ip}:{node_port} for content: {content_name}")
 
         # Receive the response from the RPNode
-        response = client_socket.recv(1024).decode()
-        print(f"Received response from the RPNode: {response}")
+        new_port = client_socket.recv(1024).decode()
+        print(f"Received response from the RPNode: {new_port}")
+
+        # Close the initial socket
+        client_socket.close()
+
+        time.sleep(1)
+
+        # Connect to the new port
+        new_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        print("connecting to the new port " + new_port)
+        new_socket.connect(('127.0.0.1', int(new_port)))
+        print(f"Connected to the new port {new_port}")
+
+        # Now you can continue communication on the new socket
+        while True:
+            response  = new_socket.recv(1024)
+            print(f"Received data from the RPNode at {node_ip}:{new_port}")
+            print(response)
+            time.sleep(1)
 
     except Exception as e:
         print(f"Error connecting to the RPNode: {e}")
-
-    finally:
-        # Close the socket
-        client_socket.close()
 
 if __name__ == "__main__":
     if len(sys.argv) != 4:
