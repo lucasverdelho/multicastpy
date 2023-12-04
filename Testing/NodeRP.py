@@ -183,25 +183,27 @@ class NodeRP:
 
             # Add the socket to the streaming_content dictionary with an index
             multicast_group = self.generate_multicast_group()
-            multicast_group_address = f"{multicast_group}-{len(self.streaming_content) + 1}"
+            multicast_group_address = f"{multicast_group}-{5000 + len(self.streaming_content) + 1}"
             self.streaming_content[content_name] = multicast_group_address
 
             # Set up the multicast socket
-            multicast_socket = socket.socket(socket.AF_INET, socket.SOCK_DGRAM, socket.IPPROTO_UDP)
+            multicast_socket = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
             multicast_socket.setsockopt(socket.IPPROTO_IP, socket.IP_MULTICAST_TTL, struct.pack('b', 1))
 
             print(f"Multicast group created for content: {content_name}")
-            print(f"Multicast group address: {multicast_group}")
-            print(f"Listening on port: {multicast_socket.getsockname()[1]}")
+            print(f"Multicast group address: {multicast_group_address}")
+            print(f"Listening on: {multicast_socket.getsockname()}")
 
             multicast_group = self.streaming_content[content_name].split('-')[0]  # Extract multicast group address
             multicast_port = self.streaming_content[content_name].split('-')[1]  # Extract port
+            print("Streaming into multicast group: " + multicast_group + ":" + multicast_port)
 
+            message = "Testing"
             while True:
                 data, addr = rtsp_socket.recvfrom(20480)
                 if data:
                     multicast_socket.sendto(data, (multicast_group, int(multicast_port)))
-
+                    # multicast_socket.sendto(message.encode(), (multicast_group, int(multicast_port)))
                     rtp_packet = RtpPacket()
                     rtp_packet.decode(data)
 
