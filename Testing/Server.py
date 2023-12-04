@@ -102,7 +102,7 @@ class Server:
                 print("Initiating server worker...")
                 # Pass the client socket and new server port to the ServerWorker
                 server_worker_instance = ServerWorker(new_server_port)
-                server_worker_instance.run()
+                server_worker_instance.receive_request()
 
         except Exception as e:
             print(f"Error handling client on new port: {e}")
