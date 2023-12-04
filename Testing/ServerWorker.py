@@ -2,7 +2,7 @@ import socket
 import threading
 from VideoStream import VideoStream
 from RtpPacket import RtpPacket
-
+import time
 
 class ServerWorker:
     def __init__(self, server_port, filename):
@@ -26,6 +26,7 @@ class ServerWorker:
         frame_number = 0
 
         while True:
+            time.sleep(0.05)
             data = video_stream.nextFrame()
             if data:
                 try:
@@ -42,6 +43,3 @@ class ServerWorker:
         rtp_packet.encode(version, padding, extension, cc, seq_num, marker, pt, ssrc, payload)
         return rtp_packet.getPacket()
 
-# # Usage
-# server = ServerWorker(1234, "example_movie.mp4")  # Use your desired port and filename
-# server.run()

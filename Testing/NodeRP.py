@@ -181,19 +181,16 @@ class NodeRP:
             print('\nConnecting to server on port ' + str(new_server_port) + '...')
 
             while True:
-                try:
-                    data, addr = rtsp_socket.recvfrom(20480)
-                    if data:
-                        rtp_packet = RtpPacket()
-                        rtp_packet.decode(data)
+                data, addr = rtsp_socket.recvfrom(20480)
+                if data:
+                    rtp_packet = RtpPacket()
+                    rtp_packet.decode(data)
 
-                        curr_frame_nbr = rtp_packet.seq_num()
-                        print("Current Seq Num: " + str(curr_frame_nbr))
+                    curr_frame_nbr = rtp_packet.seqNum()
+                    print("Current Seq Num: " + str(curr_frame_nbr))
 
-                        # Implement logic to store or display the received video frames
-                except:
-                    print("Connection Error")
-                    break
+                    # Implement logic to store or display the received video frames
+
 
 
 
