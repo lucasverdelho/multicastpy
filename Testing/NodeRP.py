@@ -175,54 +175,27 @@ class NodeRP:
 
             time.sleep(2)
 
-            connected = False
-            """Listen for RTP packets."""
+            rtsp_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+            rtsp_socket.connect((server, new_server_port))
+
+            print('\nConnecting to server on port ' + str(new_server_port) + '...')
+
             while True:
                 try:
-                    data = self.rtpSocket.recv(20480)
+                    data, addr = rtsp_socket.recvfrom(20480)
                     if data:
-                        rtpPacket = RtpPacket()
-                        rtpPacket.decode(data)
-                        
-                        currFrameNbr = rtpPacket.seqNum()
-                        print("Current Seq Num: " + str(currFrameNbr))
-                                            
-                        if currFrameNbr > self.frameNbr: # Discard the late packet
-                            self.frameNbr = currFrameNbr
-                            self.updateMovie(self.writeFrame(rtpPacket.getPayload()))
+                        rtp_packet = RtpPacket()
+                        rtp_packet.decode(data)
+
+                        curr_frame_nbr = rtp_packet.seq_num()
+                        print("Current Seq Num: " + str(curr_frame_nbr))
+
+                        # Implement logic to store or display the received video frames
                 except:
-                    # Stop listening upon requesting PAUSE or TEARDOWN
-                    if self.playEvent.isSet(): 
-                        break
+                    print("Connection Error")
+                    break
 
-                    
-            print("creating server socket to receive RTP packets")
-            receiving_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-            receiving_socket.connect((server, new_server_port))
-            print(f"Connected to the server {server} at port {new_server_port}")
-            receiving_socket.send(content_name.encode())
 
-            # # Create a UDP socket for sending RTP packets to the multicast group
-            # print("creating multicast socket to send RTP packets to the multicast group")
-            # multicast_socket = socket.socket(socket.AF_INET, socket.SOCK_DGRAM, socket.IPPROTO_UDP)
-            # multicast_socket.setsockopt(socket.IPPROTO_IP, socket.IP_MULTICAST_TTL, 2)
-
-            try:
-                while True:
-                    # Receive RTP packet from the server
-                    data, addr = receiving_socket.recvfrom(2048)
-                    rtp_packet = RtpPacket()
-                    rtp_packet.decode(data)
-                    print(f"Received RTP packet. Payload Length: {len(rtp_packet.getPayload())}")
-
-                    # Send the received RTP packet to the multicast group
-                    # multicast_socket.sendto(data, (self.multicast_group, self.multicast_port))
-
-            except KeyboardInterrupt:
-                print("Terminating streaming...")
-            finally:
-                server_socket.close()
-                # multicast_socket.close()
 
 
 

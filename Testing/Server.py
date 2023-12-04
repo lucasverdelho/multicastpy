@@ -4,16 +4,6 @@ from ServerWorker import ServerWorker
 import threading
 import os
 
-# TODO
-# 1. Create a permanent listening loop for the RTSP socket
-# 2. Wait for a client to connect
-# 3. Send the new server port and new rtp port to the client,
-#    creating a new RTSP session for each client generating 
-#    a new port for the RTP session
-# 4. Create a new thread to handle the client, 
-# 5. Close the client socket
-# 6. Repeat the loop to wait for new clients
-
 folder_path = "content/"
 
 class Server:
@@ -100,9 +90,10 @@ class Server:
             print(f"Request: {requests}")
             if requests[0] == "REQUEST_STREAM":
                 print("Initiating server worker...")
+                path_to_file = folder_path + requests[1]
                 # Pass the client socket and new server port to the ServerWorker
-                server_worker_instance = ServerWorker(new_server_port)
-                server_worker_instance.receive_request()
+                server_worker_instance = ServerWorker(new_server_port, path_to_file)
+                server_worker_instance.run()
 
         except Exception as e:
             print(f"Error handling client on new port: {e}")
