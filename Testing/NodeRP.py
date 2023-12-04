@@ -25,7 +25,8 @@ class NodeRP:
 
         # 1. Create a permanent listening loop for the RTSP socket
         nodeServerSocket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-        nodeServerSocket.bind(('', NODE_PORT))
+        # TEMPORARILY HARDCODED!!!!!!!!!!!!!!!!!!  TODO CHANGE THIS
+        nodeServerSocket.bind(('10.0.5.1', NODE_PORT)) 
         nodeServerSocket.listen(5)
 
         # Primeiro comunicar com os servidores e estabelecer os conteudos que cada um tem
@@ -108,7 +109,8 @@ class NodeRP:
     def find_available_port(self):
         try:
             temp_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-            temp_socket.bind(('localhost', 0))  # Bind to an available port on localhost
+            # TEMPORARILY HARDCODED!!!!!!!!!!!!!!!!!!  TODO CHANGE THIS
+            temp_socket.bind(('10.0.5.1', 0))  # Bind to an available port on localhost
             temp_socket.listen(1)
             port = temp_socket.getsockname()[1]
             temp_socket.close()

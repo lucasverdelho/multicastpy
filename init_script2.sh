@@ -31,18 +31,23 @@ for NODE in "${NODES[@]}"; do
                 cp ${SOURCE_FOLDER}/Testing/RtpPacket.py .
                 cp ${SOURCE_FOLDER}/Testing/VideoStream.py .
                 cp ${SOURCE_FOLDER}/Testing/testClient.py .
+                cp ${SOURCE_FOLDER}/Testing/testNode.py .
                 "
             ;;
         "n17")
             vcmd -c "/tmp/pycore.${PROCESS_ID}/${NODE}" -- bash -c "
                 cp ${SOURCE_FOLDER}/Testing/Server.py .
-                cp ${SOURCE_FOLDER}/Testing/Serverworker.py .
+                cp ${SOURCE_FOLDER}/Testing/ServerWorker.py .
                 cp ${SOURCE_FOLDER}/Testing/VideoStream.py .
                 cp ${SOURCE_FOLDER}/Testing/RtpPacket.py .
+                mkdir -p content  # Create 'content' folder if it doesn't exist
+                cp ${SOURCE_FOLDER}/Testing/movie.Mjpeg content/.
                 "
             ;;
     esac
 done
+
+sleep 1
 
 # Iterate over nodes and run vcmd commands for custom initialization commands
 for NODE in "${NODES[@]}"; do
@@ -64,3 +69,12 @@ for NODE in "${NODES[@]}"; do
             ;;
     esac
 done
+
+
+# Add sleep time (e.g., 1 second)
+sleep 1
+
+# Run the final vcmd command
+vcmd -c "/tmp/pycore.${PROCESS_ID}/n7" -- bash -c "
+    cp -r ${SOURCE_FOLDER}/Testing/* .
+    "

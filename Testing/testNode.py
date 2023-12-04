@@ -8,7 +8,7 @@ def send_content_request(node_ip, node_port, content_name):
 
     try:
         # Connect to the RPNode
-        client_socket.connect(('127.0.0.1', node_port))
+        client_socket.connect((node_ip, node_port))
 
         # Send a CONTENT_REQUEST
         request_msg = f"CONTENT_REQUEST;;{content_name}"
@@ -22,12 +22,12 @@ def send_content_request(node_ip, node_port, content_name):
         # Close the initial socket
         client_socket.close()
 
-        time.sleep(1)
+        time.sleep(2)
 
         # Connect to the new port
         new_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         print("connecting to the new port " + new_port)
-        new_socket.connect(('127.0.0.1', int(new_port)))
+        new_socket.connect((node_ip, int(new_port)))
         print(f"Connected to the new port {new_port}")
 
         # Now you can continue communication on the new socket
