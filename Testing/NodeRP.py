@@ -4,6 +4,7 @@ import sys
 import time
 import NodeRPWorker 
 from RtpPacket import RtpPacket
+import struct
 
 class NodeRP:
 
@@ -147,7 +148,7 @@ class NodeRP:
         if content_name in self.streaming_content:
             # 1.1. If there is, redirect the requesting node to the multicast group
             response_msg = f"MULTICAST_STREAM;;{content_name}"
-            socket.send(response_msg.encode())
+            request_socket.send(response_msg.encode())
             print(f"Sent MULTICAST_STREAM to the requesting node {requesting_address} for content: {content_name}")
         
         else:
@@ -180,9 +181,27 @@ class NodeRP:
 
             print('\nConnecting to server on port ' + str(new_server_port) + '...')
 
+            # Add the socket to the streaming_content dictionary with an index
+            multicast_group = self.generate_multicast_group()
+            multicast_group_address = f"{multicast_group}-{len(self.streaming_content) + 1}"
+            self.streaming_content[content_name] = multicast_group_address
+
+            # Set up the multicast socket
+            multicast_socket = socket.socket(socket.AF_INET, socket.SOCK_DGRAM, socket.IPPROTO_UDP)
+            multicast_socket.setsockopt(socket.IPPROTO_IP, socket.IP_MULTICAST_TTL, struct.pack('b', 1))
+
+            print(f"Multicast group created for content: {content_name}")
+            print(f"Multicast group address: {multicast_group}")
+            print(f"Listening on port: {multicast_socket.getsockname()[1]}")
+
+            multicast_group = self.streaming_content[content_name].split('-')[0]  # Extract multicast group address
+            multicast_port = self.streaming_content[content_name].split('-')[1]  # Extract port
+
             while True:
                 data, addr = rtsp_socket.recvfrom(20480)
                 if data:
+                    multicast_socket.sendto(data, (multicast_group, int(multicast_port)))
+
                     rtp_packet = RtpPacket()
                     rtp_packet.decode(data)
 
@@ -194,13 +213,12 @@ class NodeRP:
 
 
 
-
-
     def generate_multicast_group(self):
         # Generate a unique multicast group address for each stream
         multicast_group_base = '224.1.1.1'  # You can choose a different base address if needed
-        current_index = len(self.streaming_content) + 1
-        return f"{multicast_group_base}-{current_index}"
+        return multicast_group_base
+
+    
 
 
     def find_server_with_content(self, content_name):
