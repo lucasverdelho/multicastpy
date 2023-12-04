@@ -175,11 +175,33 @@ class NodeRP:
 
             time.sleep(2)
 
-            # Create a UDP socket for receiving RTP packets from the server
+            connected = False
+            """Listen for RTP packets."""
+            while True:
+                try:
+                    data = self.rtpSocket.recv(20480)
+                    if data:
+                        rtpPacket = RtpPacket()
+                        rtpPacket.decode(data)
+                        
+                        currFrameNbr = rtpPacket.seqNum()
+                        print("Current Seq Num: " + str(currFrameNbr))
+                                            
+                        if currFrameNbr > self.frameNbr: # Discard the late packet
+                            self.frameNbr = currFrameNbr
+                            self.updateMovie(self.writeFrame(rtpPacket.getPayload()))
+                except:
+                    # Stop listening upon requesting PAUSE or TEARDOWN
+                    if self.playEvent.isSet(): 
+                        break
+
+                    
             print("creating server socket to receive RTP packets")
-            receiving_socket = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+            receiving_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
             receiving_socket.connect((server, new_server_port))
             print(f"Connected to the server {server} at port {new_server_port}")
+            receiving_socket.send(content_name.encode())
+
             # # Create a UDP socket for sending RTP packets to the multicast group
             # print("creating multicast socket to send RTP packets to the multicast group")
             # multicast_socket = socket.socket(socket.AF_INET, socket.SOCK_DGRAM, socket.IPPROTO_UDP)

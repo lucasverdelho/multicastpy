@@ -1,13 +1,11 @@
 import sys, traceback, threading, socket
 from VideoStream import VideoStream
 from RtpPacket import RtpPacket
+import time
 
 class ServerWorker:
-    PLAYING = 2
-    state = PLAYING
 
     serverPort = 0
-    clientInfo = {}
 
     def __init__(self, serverPort):
         self.serverPort = serverPort
@@ -15,36 +13,67 @@ class ServerWorker:
         print(f"Server port: {self.serverPort}")
 
     def receive_request(self):
-        rtspSocket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        # Create a new socket for listening
+        rtspSocket = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
         rtspSocket.bind(('127.0.0.1', self.serverPort))
-        print(f"Server socket: {rtspSocket.getsockname()}")
         rtspSocket.listen(5)
+
         print("Listening for connections...")
 
         try:
+            # Accept a connection from the client
             clientSocket, clientAddr = rtspSocket.accept()
-            print("Client connected.")
-            self.clientInfo['rtspSocket'] = (clientSocket, clientAddr)
-            self.sendRtp()
+            print(f"Client connected: {clientAddr}")
+
+            # Receive the request from the client
+            content_name = clientSocket.recv(1024).decode()
+            print(f"Received request from client: {content_name}")
+
+            # Handle the received request (you can replace this with your logic)
+            self.sendRtp(content_name, clientSocket)
+
+            # Optionally, you can send a response back to the client
+            response = "OK"
+            clientSocket.send(response.encode())
+            
         except Exception as e:
             print(f"Error accepting client connection: {e}")
         finally:
+            # Close the client socket
+            if 'clientSocket' in locals():
+                clientSocket.close()
+
+            # Close the server socket
             rtspSocket.close()
 
-    def sendRtp(self):
-            while self.state == self.PLAYING:  # Add a condition to break out of the loop
-                data = self.clientInfo['videoStream'].nextFrame()
-                if data:
-                    frameNumber = self.clientInfo['videoStream'].frameNbr()
-                    try:
-                        client_address = self.clientInfo['rtspSocket'][1]
-                        address = client_address[0]
-                        port = int(client_address[1])
-                        self.clientInfo['rtspSocket'][0].sendto(self.makeRtp(data, frameNumber), (address, port))
-                    except:
-                        print("Connection Error")
-                        traceback.print_exc(file=sys.stdout)
-                        break  # Break out of the loop in case of an error
+        print("Server socket closed.")
+
+    def sendRtp(self, content_name, clientSocket):
+        video_stream = VideoStream(content_name)
+        frame_number = 0
+
+        while True:
+            frame = video_stream.nextFrame()
+            if not frame:
+                # End of video stream
+                break
+
+            try:
+                # Create an RTP packet
+                rtp_packet = self.makeRtp(frame, frame_number)
+
+                # Convert the RTP packet to bytes before sending
+                rtp_bytes = bytes(rtp_packet)
+
+                # Send the RTP packet over the existing client socket
+                clientSocket.send(rtp_packet)
+
+                # Wait for a short time to simulate real-time streaming
+                # time.sleep(0.05)
+
+                frame_number += 1
+            except Exception as e:
+                print(f"Error sending RTP packet: {e}")
 
 
     def makeRtp(self, payload, frameNbr):
