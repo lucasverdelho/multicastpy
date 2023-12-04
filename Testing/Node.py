@@ -109,6 +109,7 @@ class Node:
         # 1. Check if the node is currently streaming the content
         if content_name in self.streaming_content:
             print("Node has the content")
+            self.redirect_current_streaming_content(requesting_address, socket, content_name)
 
         # 2. If not, check if we are connected to the RP
         elif self.rp_neighbour:
@@ -123,6 +124,15 @@ class Node:
             connected_neighbour = self.locate_rp(requesting_address, socket)
             # 3.2. Request the content from the RP through the connected neighbour
             self.send_request_to_rp(content_name, socket, connected_neighbour) 
+
+
+    def redirect_current_streaming_content(self, requesting_address, content_name):
+        receiving_socket = self.streaming_content[content_name]
+        while True:
+            data = receiving_socket.recv(2048)
+            if not data:
+                break
+            requesting_address.sendall(data)
 
 
     # Vai construir um caminho de ips até ao RP
