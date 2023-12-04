@@ -204,7 +204,7 @@ class NodeRP:
             while True:
                 data, addr = rtsp_socket.recvfrom(20480)
                 if data:
-                    multicast_socket.sendto(data, (multicast_group, int(multicast_port)))
+                    # multicast_socket.sendto(data, (multicast_group, int(multicast_port)))
                     # multicast_socket.sendto(message.encode(), (multicast_group, int(multicast_port)))
                     rtp_packet = RtpPacket()
                     rtp_packet.decode(data)
@@ -234,3 +234,6 @@ class NodeRP:
 
 if __name__ == "__main__":
     NodeRP().main()
+
+
+

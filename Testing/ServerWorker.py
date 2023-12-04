@@ -26,7 +26,7 @@ class ServerWorker:
         frame_number = 0
 
         while True:
-            time.sleep(0.05)
+            time.sleep(0.07)
             data = video_stream.nextFrame()
             if data:
                 try:
