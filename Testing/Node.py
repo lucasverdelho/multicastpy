@@ -82,7 +82,7 @@ class Node:
         # 1. Check the request type
         request_type = request.split(";;")[0]
 
-        if request_type == "CLIENT_REQUEST":
+        if request_type == "CLIENT_REQUEST" or request_type == "SETUP":
             content_name = request.split(";;")[1]
             self.client_request(requesting_address, socket, content_name)
 
@@ -109,6 +109,12 @@ class Node:
         # 1. Check if the node is currently streaming the content
         if content_name in self.streaming_content:
             print("Node has the content")
+
+        # 1. Check if the node is currently streaming the content
+        if content_name in self.streaming_content:
+            print("Node has the content")
+            self.redirect_current_streaming_content(requesting_address, socket, content_name)
+
 
         # 2. If not, check if we are connected to the RP
         elif self.rp_neighbour:
@@ -165,6 +171,16 @@ class Node:
     # Vai encaminhar os pacotes recebidos para o node seguinte no caminho recebido no pacote, acrescentando 1 ao contador de hops
     def redirect_stream(self, requesting_address, socket, request):
         pass
+
+    #gets the data that is being streamed and sends it to the requesting address
+
+    def redirect_current_streaming_content(self, requesting_address, content_name):
+        receiving_socket = self.streaming_content[content_name] #gets the data from the socket
+        while True: #redirects it
+            data = receiving_socket.recv(1024)
+            if not data:
+                break
+            requesting_address.sendall(data)
 
     # Vai encaminhar o pedido para o node seguinte no caminho para o RP acrescentando 1 ao contador de hops
     # O ultimo nodo sera responsavel por enviar o pedido ao RP
