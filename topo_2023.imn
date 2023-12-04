@@ -26,8 +26,8 @@ node n1 {
 	!
     }
     canvas c1
-    iconcoords {156.0 357.0}
-    labelcoords {159.0 328.0}
+    iconcoords {156.0 358.0}
+    labelcoords {159.0 329.0}
     interface-peer {eth0 n12}
     interface-peer {eth1 n13}
     interface-peer {eth2 n3}
@@ -40,6 +40,10 @@ node n2 {
     model router
     network-config {
 	hostname n2
+	!
+	interface eth3
+	 ip address 10.0.17.2/24
+	 ipv6 address 2001:17::2/64
 	!
 	interface eth2
 	 ip address 10.0.16.1/24
@@ -55,11 +59,12 @@ node n2 {
 	!
     }
     canvas c1
-    iconcoords {315.0 238.0}
-    labelcoords {317.0 218.0}
+    iconcoords {302.0 234.0}
+    labelcoords {304.0 214.0}
     interface-peer {eth0 n11}
     interface-peer {eth1 n1}
     interface-peer {eth2 n5}
+    interface-peer {eth3 n4}
 }
 
 node n3 {
@@ -67,10 +72,6 @@ node n3 {
     model router
     network-config {
 	hostname n3
-	!
-	interface eth2
-	 ip address 10.0.12.1/24
-	 ipv6 address 2001:12::1/64
 	!
 	interface eth1
 	 ip address 10.0.7.1/24
@@ -86,7 +87,6 @@ node n3 {
     labelcoords {250.0 523.0}
     interface-peer {eth0 n1}
     interface-peer {eth1 n7}
-    interface-peer {eth2 n4}
 }
 
 node n5 {
@@ -94,6 +94,10 @@ node n5 {
     model router
     network-config {
 	hostname n5
+	!
+	interface eth1
+	 ip address 10.0.12.1/24
+	 ipv6 address 2001:12::1/64
 	!
 	interface eth4
 	 ip address 10.0.19.2/24
@@ -113,12 +117,13 @@ node n5 {
 	!
     }
     canvas c1
-    iconcoords {473.0 181.0}
-    labelcoords {507.0 174.0}
+    iconcoords {484.0 173.0}
+    labelcoords {518.0 166.0}
     interface-peer {eth0 n15}
     interface-peer {eth2 n2}
     interface-peer {eth3 n9}
     interface-peer {eth4 n6}
+    interface-peer {eth1 n4}
 }
 
 node n6 {
@@ -126,10 +131,6 @@ node n6 {
     model router
     network-config {
 	hostname n6
-	!
-	interface eth4
-	 ip address 10.0.14.2/24
-	 ipv6 address 2001:14::2/64
 	!
 	interface eth3
 	 ip address 10.0.20.1/24
@@ -149,13 +150,12 @@ node n6 {
 	!
     }
     canvas c1
-    iconcoords {480.0 315.0}
-    labelcoords {445.0 315.0}
+    iconcoords {575.0 322.0}
+    labelcoords {540.0 322.0}
     interface-peer {eth0 n8}
     interface-peer {eth1 n7}
     interface-peer {eth2 n5}
     interface-peer {eth3 n9}
-    interface-peer {eth4 n4}
 }
 
 node n7 {
@@ -163,6 +163,10 @@ node n7 {
     model router
     network-config {
 	hostname n7
+	!
+	interface eth4
+	 ip address 10.0.22.2/24
+	 ipv6 address 2001:22::2/64
 	!
 	interface eth3
 	 ip address 10.0.11.2/24
@@ -182,12 +186,13 @@ node n7 {
 	!
     }
     canvas c1
-    iconcoords {476.0 505.0}
-    labelcoords {506.0 527.0}
+    iconcoords {471.0 472.0}
+    labelcoords {501.0 494.0}
     interface-peer {eth0 n14}
     interface-peer {eth1 n3}
     interface-peer {eth2 n8}
     interface-peer {eth3 n6}
+    interface-peer {eth4 n4}
 }
 
 node n8 {
@@ -237,8 +242,8 @@ node n9 {
 	!
     }
     canvas c1
-    iconcoords {684.0 192.0}
-    labelcoords {685.0 170.0}
+    iconcoords {694.0 178.0}
+    labelcoords {695.0 156.0}
     interface-peer {eth0 n5}
     interface-peer {eth1 n6}
     interface-peer {eth2 n10}
@@ -401,25 +406,30 @@ node n4 {
     network-config {
 	hostname n4
 	!
-	interface eth2
-	 ip address 10.0.15.1/24
-	 ipv6 address 2001:15::1/64
-	!
-	interface eth1
-	 ip address 10.0.14.1/24
-	 ipv6 address 2001:14::1/64
-	!
 	interface eth0
 	 ip address 10.0.12.2/24
 	 ipv6 address 2001:12::2/64
 	!
+	interface eth4
+	 ip address 10.0.22.1/24
+	 ipv6 address 2001:22::1/64
+	!
+	interface eth3
+	 ip address 10.0.17.1/24
+	 ipv6 address 2001:17::1/64
+	!
+	interface eth2
+	 ip address 10.0.15.1/24
+	 ipv6 address 2001:15::1/64
+	!
     }
     canvas c1
-    iconcoords {352.0 341.0}
-    labelcoords {349.0 318.0}
-    interface-peer {eth0 n3}
-    interface-peer {eth1 n6}
+    iconcoords {376.0 338.0}
+    labelcoords {374.0 304.0}
     interface-peer {eth2 n1}
+    interface-peer {eth3 n2}
+    interface-peer {eth4 n7}
+    interface-peer {eth0 n5}
 }
 
 link l1 {
@@ -517,18 +527,23 @@ link l25 {
     bandwidth 0
 }
 
-link l13 {
-    nodes {n3 n4}
-    bandwidth 0
-}
-
-link l15 {
-    nodes {n4 n6}
-    bandwidth 0
-}
-
 link l16 {
     nodes {n4 n1}
+    bandwidth 0
+}
+
+link l18 {
+    nodes {n4 n2}
+    bandwidth 0
+}
+
+link l23 {
+    nodes {n4 n7}
+    bandwidth 0
+}
+
+link l13 {
+    nodes {n5 n4}
     bandwidth 0
 }
 
