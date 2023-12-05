@@ -31,43 +31,51 @@ class Server:
         local_address = server_socket.getsockname()
         print(local_address)
 
-        # 3. Accept Connection from the RP Node and send the content list
-        rpsocket, rp_address = server_socket.accept()  # Unpack the tuple
-        print(f"RP Node connected from {rp_address}.")
-
-        rpsocket.recv(1024).decode()
-        print("Received request from RP Node.")
-        response_msg = f"{self.content_list}"
-        rpsocket.send(response_msg.encode())
-        print("Sent content list to RP Node.")
-        rpsocket.close()
-        print("Closed socket.")
 
 
+        # MAIN LISTEN LOOP
         while True:
 
             # 2. Wait for a client to connect
             client_socket, client_address = server_socket.accept()
             print(f"Client connected: {client_address}")
-            new_server_port = self.find_available_port()
-            print(f"New server port: {new_server_port}")
 
             # Read the request from the client
             # Wait until there is data available to be received
 
             request = client_socket.recv(1024).decode()
+            requests = request.split(";;")
 
-            # 3. Send the new server port and new rtp port to the client
-            #    creating a new RTSP session for each client generating
-            #    a new port for the RTP session
-            response_msg = f"{new_server_port}"
-            client_socket.send(response_msg.encode())
+            print(f"Request: {requests}")
+            if requests[0] == "CONTENT_INFO_REQUEST":
+                # 3. Send the content list to the RP Node
+                print("RP Node connected.")
+                response_msg = f"{self.content_list}"
+                client_socket.send(response_msg.encode())
+                print("Sent content list to RP Node.")
+                client_socket.close()
+                print("Closed socket.")
+                continue
 
-            # 4. Create a new thread to handle the client
-            threading.Thread(target=self.handle_client, args=(new_server_port, client_socket, client_address, request)).start()
+            elif requests[0] == "REQUEST_STREAM":
+                new_server_port = self.find_available_port()
+                print(f"New server port: {new_server_port}")
+                # 3. Send the new server port and new rtp port to the client
+                #    creating a new RTSP session for each client generating
+                #    a new port for the RTP session
+                response_msg = f"{new_server_port}"
+                client_socket.send(response_msg.encode())
+                    
 
-            # 5. Close the client socket
-            client_socket.close()
+                # 4. Create a new thread to handle the client
+                threading.Thread(target=self.handle_client, args=(new_server_port, requests)).start()
+
+                # 5. Close the client socket
+                client_socket.close()
+            else :
+                print("Invalid request.")
+                client_socket.close()
+                continue
 
 
     def find_available_port(self):
@@ -84,21 +92,14 @@ class Server:
 
 
 
-    def handle_client(self, new_server_port, client_socket, client_address, request):
-        try:
-            requests = request.split(";;")
-            print(f"Request: {requests}")
-            if requests[0] == "REQUEST_STREAM":
-                print("Initiating server worker...")
-                path_to_file = folder_path + requests[1]
-                # Pass the client socket and new server port to the ServerWorker
-                server_worker_instance = ServerWorker(new_server_port, path_to_file)
-                server_worker_instance.run()
+    def handle_client(self, new_server_port,requests):
 
-        except Exception as e:
-            print(f"Error handling client on new port: {e}")
-        finally:
-            client_socket.close()
+        print("Initiating server worker...")
+        path_to_file = folder_path + requests[1]
+        # Pass the client socket and new server port to the ServerWorker
+        server_worker_instance = ServerWorker(new_server_port, path_to_file)
+        server_worker_instance.run()
+
 
 
 
