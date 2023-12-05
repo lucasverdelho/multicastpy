@@ -99,6 +99,18 @@ sleep 1
 
 xterm -e "vcmd -c '/tmp/pycore.${PROCESS_ID}/n14' -- bash -c 'python3 connect_to_testNode.py 127.0.0.1 7770'; exec bash" &
 
+
+sleep 6
+
+xterm -e "vcmd -c '/tmp/pycore.${PROCESS_ID}/n18' -- bash -c 'python3 testNode.py 10.0.5.1 5000 movie.Mjpeg'; exec bash" &
+
+
+sleep 1
+
+xterm -e "vcmd -c '/tmp/pycore.${PROCESS_ID}/n18' -- bash -c 'python3 connect_to_testNode.py 127.0.0.1 7770'; exec bash" &
+
+
+
 # sleep 5
 
 # xterm -e "vcmd -c '/tmp/pycore.${PROCESS_ID}/n14' -- bash -c 'python3 testClient.py'; exec bash" &

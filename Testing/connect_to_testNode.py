@@ -13,8 +13,8 @@ if __name__ == "__main__":
     rtsp_socket.connect((server_ip, server_port))
 
     print("Connected to server.")
-    
+
     # Start the loop to receive RTP packets from the server and send them to the multicast group
     while True:
         data, addr = rtsp_socket.recvfrom(20480)
-        print(data)
+        print("Received data from server.")

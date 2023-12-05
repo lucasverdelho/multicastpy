@@ -133,7 +133,7 @@ class NodeRP:
         request_socket, server_address = handling_socket.accept()
         print(f"Accepted connection from the node: {server_address}")
 
-        message = "ACKNOWLEDGED CONNECTION"
+        message = f"ACKNOWLEDGED CONNECTION"
         request_socket.send(message.encode())
 
         # 1. Check the request type
@@ -152,12 +152,20 @@ class NodeRP:
         # 1. Check if there already exists a multicast group for the content
         if content_name in self.streaming_content:
             # 1.1. If there is, redirect the requesting node to the multicast group
-            response_msg = f"MULTICAST_STREAM;;{content_name}"
-            request_socket.send(response_msg.encode())
-            print(f"Sent MULTICAST_STREAM to the requesting node {requesting_address} for content: {content_name}")
+            self.redirect_to_multicast(requesting_address, request_socket, content_name)
         
         else:
             self.handle_multicast(content_name, request_socket) # Eventualmente temos que passar a request_socket para esta funcao responder ao pedinte
+
+    def redirect_to_multicast(self, requesting_address, request_socket, content_name):
+        # 1.1. If there is, redirect the requesting node to the multicast group
+        time.sleep(2)
+        multicast_group_address = self.streaming_content[content_name].split('-')[0]
+        multicast_group_port = self.streaming_content[content_name].split('-')[1]
+        response_msg = f"MULTICAST_STREAM;;{multicast_group_address};;{multicast_group_port}"
+        print(response_msg)
+        request_socket.send(response_msg.encode())
+        print(f"Sent MULTICAST_STREAM to the requesting node {requesting_address} for content: {content_name}")
 
 
     def handle_multicast(self, content_name, request_socket):
@@ -237,7 +245,7 @@ class NodeRP:
                 rtp_packet.decode(data)
 
                 curr_frame_nbr = rtp_packet.seqNum()
-                print("Current Seq Num: " + str(curr_frame_nbr))
+                # print("Current Seq Num: " + str(curr_frame_nbr))
 
                 # Implement logic to store or display the received video frames
 

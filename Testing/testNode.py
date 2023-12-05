@@ -85,7 +85,7 @@ def get_multicast_stream(multicast_group_address, multicast_group_port, requesti
             # Print information about received data
             print(f"Received data from {address}")
             print(f"Data length: {len(data)}")
-            print(f"Data: {data}")
+            # print(f"Data: {data}")
 
             # Send the data to the requesting socket
             requesting_socket.send(data)
