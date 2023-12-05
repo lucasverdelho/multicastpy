@@ -26,7 +26,7 @@ class NodeRP:
         # 1. Create a permanent listening loop for the RTSP socket
         nodeServerSocket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         # TEMPORARILY HARDCODED!!!!!!!!!!!!!!!!!!  TODO CHANGE THIS
-        nodeServerSocket.bind(('10.0.5.1', NODE_PORT)) 
+        nodeServerSocket.bind(('0.0.0.0', NODE_PORT)) 
         nodeServerSocket.listen(5)
 
         # Primeiro comunicar com os servidores e estabelecer os conteudos que cada um tem
@@ -110,7 +110,7 @@ class NodeRP:
         try:
             temp_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
             # TEMPORARILY HARDCODED!!!!!!!!!!!!!!!!!!  TODO CHANGE THIS
-            temp_socket.bind(('10.0.5.1', 0))  # Bind to an available port on localhost
+            temp_socket.bind(('0.0.0.0', 0))  # Bind to an available port on localhost
             temp_socket.listen(1)
             port = temp_socket.getsockname()[1]
             temp_socket.close()
@@ -125,7 +125,7 @@ class NodeRP:
         handling_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         # TODO METER BIND APENAS PARA A INTERFACE NECESSARIA, VER DE ONDE VEIO O PEDIDO E FAZER BIND PARA ESSA INTERFACE
         # TODO POR ENQUANTO ESTA HARDCODED, TEMOS QUE MUDAR ISTO
-        handling_socket.bind(('10.0.5.1', new_server_port))
+        handling_socket.bind(('0.0.0.0', new_server_port))
         handling_socket.listen(1)
 
         print(handling_socket.getsockname())
