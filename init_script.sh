@@ -4,7 +4,7 @@
 PROCESS_ID="36271"
 
 # List of nodes for which you want to run vcmd commands
-NODES=("n1" "n2" "n3" "n4" "n5" "n6" "n7" "n8" "n9" "n10" "n11" "n12" "n13" "n14" "n15" "n16" "n17" "n18") 
+NODES=("n1" "n2" "n3" "n4" "n5" "n6" "n7" "n8" "n9" "n10" "n11" "n12" "n13" "n14" "n15" "n16" "n17" "n18" "n24") 
 
 # Source folder for file copies
 SOURCE_FOLDER="/home/core/multicastpy"
@@ -35,7 +35,7 @@ for NODE in "${NODES[@]}"; do
                 cp ${SOURCE_FOLDER}/Testing/connect_to_testNode.py .
                 "
             ;;
-        "n17")
+        "n17"|"n24")
             vcmd -c "/tmp/pycore.${PROCESS_ID}/${NODE}" -- bash -c "
                 cp ${SOURCE_FOLDER}/Testing/Server.py .
                 cp ${SOURCE_FOLDER}/Testing/ServerWorker.py .
@@ -63,7 +63,7 @@ for NODE in "${NODES[@]}"; do
                 $CUSTOM_COMMAND_INIT_CLIENT
                 "
             ;;
-        "n17")
+        "n17"|"n24")
             vcmd -c "/tmp/pycore.${PROCESS_ID}/${NODE}" -- bash -c "
                 $CUSTOM_COMMAND_INIT_CLIENT
                 "
@@ -84,6 +84,8 @@ sleep 1
 
 # Open terminal for n17 using xterm
 xterm -geometry 80x24+0+0 -e "vcmd -c '/tmp/pycore.${PROCESS_ID}/n17' -- bash -c 'python3 Server.py 6000'; exec bash" &
+
+xterm -geometry 80x24+1400+0 -e "vcmd -c '/tmp/pycore.${PROCESS_ID}/n24' -- bash -c 'python3 Server.py 6000'; exec bash" &
 
 sleep 1
 
