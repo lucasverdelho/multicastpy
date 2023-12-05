@@ -32,6 +32,7 @@ for NODE in "${NODES[@]}"; do
                 cp ${SOURCE_FOLDER}/Testing/VideoStream.py .
                 cp ${SOURCE_FOLDER}/Testing/testClient.py .
                 cp ${SOURCE_FOLDER}/Testing/testNode.py .
+                cp ${SOURCE_FOLDER}/Testing/connect_to_testNode.py .
                 "
             ;;
         "n17")
@@ -94,14 +95,18 @@ sleep 1
 # Open terminal for n14 using xterm
 xterm -e "vcmd -c '/tmp/pycore.${PROCESS_ID}/n14' -- bash -c 'python3 testNode.py 10.0.5.1 5000 movie.Mjpeg'; exec bash" &
 
-
-sleep 5
-
-xterm -e "vcmd -c '/tmp/pycore.${PROCESS_ID}/n14' -- bash -c 'python3 testClient.py'; exec bash" &
-
 sleep 1
 
-xterm -e "vcmd -c '/tmp/pycore.${PROCESS_ID}/n18' -- bash -c 'python3 testClient.py'; exec bash" &
+xterm -e "vcmd -c '/tmp/pycore.${PROCESS_ID}/n14' -- bash -c 'python3 connect_to_testNode.py 127.0.0.1 7770'; exec bash" &
+
+# sleep 5
+
+# xterm -e "vcmd -c '/tmp/pycore.${PROCESS_ID}/n14' -- bash -c 'python3 testClient.py'; exec bash" &
+
+# sleep 1
+
+# xterm -e "vcmd -c '/tmp/pycore.${PROCESS_ID}/n18' -- bash -c 'python3 testClient.py'; exec bash" &
+
 
 # Wait for all background jobs to finish
 wait    

@@ -5,8 +5,9 @@ import time
 # import numpy as np
 import struct
 
+streaming_content = {} # Dicionario com o nome do conteudo e o socket que esta a fazer streaming
 
-def send_content_request(node_ip, node_port, content_name):
+def send_content_request(node_ip, node_port, content_name, requesting_socket):
     # Create a socket to connect to the RPNode
     client_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 
@@ -48,7 +49,7 @@ def send_content_request(node_ip, node_port, content_name):
             print(f"Received MULTICAST_STREAM from the RPNode at {node_ip}:{new_port} for content: {content_name}")
             print(f"Multicast group address: {multicast_group_address}")
             print(f"Multicast group port: {multicast_group_port}")
-            get_multicast_stream(multicast_group_address, int(multicast_group_port))
+            get_multicast_stream(multicast_group_address, int(multicast_group_port),requesting_socket)
             break
 
         print(f"Received data from the RPNode at {node_ip}:{new_port}")
@@ -60,9 +61,9 @@ def send_content_request(node_ip, node_port, content_name):
 
 
 
-            
+        
 
-def get_multicast_stream(multicast_group_address, multicast_group_port):
+def get_multicast_stream(multicast_group_address, multicast_group_port, requesting_socket):
 
     # Create a UDP socket
     client_socket = socket.socket(socket.AF_INET, socket.SOCK_DGRAM, socket.IPPROTO_UDP)
@@ -86,6 +87,9 @@ def get_multicast_stream(multicast_group_address, multicast_group_port):
             print(f"Data length: {len(data)}")
             print(f"Data: {data}")
 
+            # Send the data to the requesting socket
+            requesting_socket.send(data)
+
     except Exception as main_error:
         print(f"Error in main loop: {main_error}")
 
@@ -106,4 +110,13 @@ if __name__ == "__main__":
     rp_node_port = int(sys.argv[2])
     content_name = sys.argv[3]
 
-    send_content_request(rp_node_ip, rp_node_port, content_name)
+    # Create a socket to accept the incoming connection from the client
+    server_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+    server_socket.bind(('localhost', 7770))  # Bind to any available port
+    server_socket.listen(1)
+
+    print("Waiting for a connection from the client...")
+    requesting_socket, client_address = server_socket.accept()
+    print(f"Accepted connection from {client_address}")
+
+    send_content_request(rp_node_ip, rp_node_port, content_name, requesting_socket)

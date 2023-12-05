@@ -76,26 +76,26 @@ class Node:
  
     def handle_request(self, new_server_port, requesting_address, request):
 
-        socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-        socket.connect((requesting_address, new_server_port))
+        receiving_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        receiving_socket.connect((requesting_address, new_server_port))
 
         # 1. Check the request type
         request_type = request.split(";;")[0]
 
         if request_type == "CLIENT_REQUEST":
             content_name = request.split(";;")[1]
-            self.client_request(requesting_address, socket, content_name)
+            self.client_request(requesting_address, receiving_socket, content_name)
 
         # A logica aqui nao esta bem, isto nao funciona em casos de maior profundidade
         elif request_type == "LOCATE_RP":
-            connected_neighbour = self.locate_rp(requesting_address, socket)
-            socket.send(connected_neighbour.encode())
+            connected_neighbour = self.locate_rp(requesting_address, receiving_socket)
+            receiving_socket.send(connected_neighbour.encode())
 
         elif request_type == "REDIRECT_STREAM":
-            self.redirect_stream(requesting_address, socket, request)
+            self.redirect_stream(requesting_address, receiving_socket, request)
 
         elif request_type == "REQUEST_STREAM":
-            self.request_stream(requesting_address, socket, request)
+            self.request_stream(requesting_address, receiving_socket, request)
 
         else:
             print(f"Invalid request: {request}")
