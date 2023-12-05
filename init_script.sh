@@ -4,7 +4,7 @@
 PROCESS_ID="43101"
 
 # List of nodes for which you want to run vcmd commands
-NODES=("n1" "n2" "n3" "n4" "n5" "n6" "n7" "n8" "n9" "n10" "n11" "n12" "n13" "n14" "n15" "n16" "n17")
+NODES=("n1" "n2" "n3" "n4" "n5" "n6" "n7" "n8" "n9" "n10" "n11" "n12" "n13" "n14" "n15" "n16" "n17" "n18") 
 
 # Source folder for file copies
 SOURCE_FOLDER="/home/core/multicastpy"
@@ -25,7 +25,7 @@ for NODE in "${NODES[@]}"; do
                 cp ${SOURCE_FOLDER}/Testing/*.py .
                 "
             ;;
-        "n11"|"n12"|"n13"|"n14"|"n15"|"n16")
+        "n11"|"n12"|"n13"|"n14"|"n15"|"n16"|"n18")
             vcmd -c "/tmp/pycore.${PROCESS_ID}/${NODE}" -- bash -c "
                 cp ${SOURCE_FOLDER}/Testing/Client.py .
                 cp ${SOURCE_FOLDER}/Testing/RtpPacket.py .
@@ -98,6 +98,10 @@ xterm -e "vcmd -c '/tmp/pycore.${PROCESS_ID}/n14' -- bash -c 'python3 testNode.p
 sleep 5
 
 xterm -e "vcmd -c '/tmp/pycore.${PROCESS_ID}/n14' -- bash -c 'python3 testClient.py'; exec bash" &
+
+sleep 1
+
+xterm -e "vcmd -c '/tmp/pycore.${PROCESS_ID}/n18' -- bash -c 'python3 testClient.py'; exec bash" &
 
 # Wait for all background jobs to finish
 wait    

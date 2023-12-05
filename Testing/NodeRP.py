@@ -197,7 +197,7 @@ class NodeRP:
                                          proto=socket.IPPROTO_UDP, fileno=None)
         # This defines how many hops a multicast datagram can travel. 
         # The IP_MULTICAST_TTL's default value is 1 unless we set it otherwise. 
-        multicast_socket.setsockopt(socket.IPPROTO_IP, socket.IP_MULTICAST_TTL, 1)
+        multicast_socket.setsockopt(socket.IPPROTO_IP, socket.IP_MULTICAST_TTL, 5)
 
         # This defines to which network interface (NIC) is responsible for
         # transmitting the multicast datagram; otherwise, the socket 
