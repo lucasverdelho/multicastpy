@@ -78,3 +78,21 @@ sleep 1
 vcmd -c "/tmp/pycore.${PROCESS_ID}/n7" -- bash -c "
     cp -r ${SOURCE_FOLDER}/Testing/* .
     "
+sleep 1
+
+
+# Open terminal for n17 using xterm
+xterm -e "vcmd -c '/tmp/pycore.${PROCESS_ID}/n17' -- bash -c 'python3 Server.py 6000'; exec bash" &
+
+sleep 1
+
+# Open terminal for n7 using xterm
+xterm -e "vcmd -c '/tmp/pycore.${PROCESS_ID}/n7' -- bash -c 'python3 NodeRP.py 5000'; exec bash" &
+
+sleep 1
+
+# Open terminal for n14 using xterm
+xterm -e "vcmd -c '/tmp/pycore.${PROCESS_ID}/n14' -- bash -c 'python3 testNode.py 10.0.5.1 5000 movie.Mjpeg'; exec bash" &
+
+# Wait for all background jobs to finish
+wait    
