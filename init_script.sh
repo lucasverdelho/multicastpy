@@ -94,5 +94,10 @@ sleep 1
 # Open terminal for n14 using xterm
 xterm -e "vcmd -c '/tmp/pycore.${PROCESS_ID}/n14' -- bash -c 'python3 testNode.py 10.0.5.1 5000 movie.Mjpeg'; exec bash" &
 
+
+sleep 5
+
+xterm -e "vcmd -c '/tmp/pycore.${PROCESS_ID}/n14' -- bash -c 'python3 testClient.py'; exec bash" &
+
 # Wait for all background jobs to finish
 wait    

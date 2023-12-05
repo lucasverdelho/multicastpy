@@ -193,8 +193,18 @@ class NodeRP:
         self.streaming_content[content_name] = multicast_group_address
 
         # Set up the multicast socket
-        multicast_socket = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
-        multicast_socket.setsockopt(socket.IPPROTO_IP, socket.IP_MULTICAST_TTL, struct.pack('b', 1))
+        multicast_socket = socket.socket(family=socket.AF_INET, type=socket.SOCK_DGRAM, 
+                                         proto=socket.IPPROTO_UDP, fileno=None)
+        # This defines how many hops a multicast datagram can travel. 
+        # The IP_MULTICAST_TTL's default value is 1 unless we set it otherwise. 
+        multicast_socket.setsockopt(socket.IPPROTO_IP, socket.IP_MULTICAST_TTL, 1)
+
+        # This defines to which network interface (NIC) is responsible for
+        # transmitting the multicast datagram; otherwise, the socket 
+        # uses the default interface (ifindex = 1 if loopback is 0)
+        # If we wish to transmit the datagram to multiple NICs, we
+        # ought to create a socket for each NIC. 
+        multicast_socket.setsockopt(socket.IPPROTO_IP, socket.IP_MULTICAST_IF, socket.inet_aton('10.0.5.1'))
 
         print(f"Multicast group created for content: {content_name}")
         print(f"Multicast group address: {multicast_group_address}")
