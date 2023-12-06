@@ -43,5 +43,4 @@ if __name__ == "__main__":
     # Start the loop to receive RTP packets from the server and send them to the multicast group
     while True:
         data, addr = new_socket.recvfrom(20480)
-        print("Received data from server.")
-        print(data.decode())
+        print(data)
