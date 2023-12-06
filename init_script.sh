@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # Set the process ID
-PROCESS_ID="40617"
+PROCESS_ID="38751"
 
 # List of nodes for which you want to run vcmd commands
 NODES=("n1" "n2" "n3" "n4" "n5" "n6" "n7" "n8" "n9" "n10" "n11" "n12" "n13" "n14" "n15" "n16" "n17" "n18" "n24") 

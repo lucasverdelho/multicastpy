@@ -9,10 +9,11 @@ import copy
 
 class NodeRP:
 
-    neighbours = []
-    serverIPs = []
-    content = {}
-    streaming_content = {}
+    neighbours = [] # List of neighbouring nodes
+    serverIPs = [] # List of servers
+    content = {} # {server: [content_name]}
+    streaming_content = {} # {content_name: receiving_socket}
+    nodes_requesting_content = {} # {content_name: [requesting_node_socket]}
 
     def main(self):
         print("Starting RP Node")
@@ -81,7 +82,7 @@ class NodeRP:
             requesting_socket.send(response_msg.encode())
 
             # Create a new thread to handle the request
-            threading.Thread(target=self.handle_request, args=(new_server_port, requesting_address, request)).start()
+            threading.Thread(target=self.handle_request, args=(new_server_port, request)).start()
 
             # Close the socket for this connection
             requesting_socket.close()
@@ -120,7 +121,7 @@ class NodeRP:
             return None
 
     
-    def handle_request(self, new_server_port, requesting_address, request):
+    def handle_request(self, new_server_port, request):
         # Create a new socket for each server connection
         handling_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         # Listen on all interfaces
@@ -154,26 +155,12 @@ class NodeRP:
             self.handle_multicast(content_name, request_socket) # Eventualmente temos que passar a request_socket para esta funcao responder ao pedinte
 
     def redirect_multicast(self, request_socket, content_name):
-        # Get the socket that is receiving the stream and send all the RTP packets to the requesting node
-        rtsp_socket = self.streaming_content[content_name]
-        response = f"MULTICAST_STREAM;;{content_name}"
-        request_socket.send(response.encode())
-        print(f"Sent MULTICAST_STREAM response to the node for the content: {content_name}")
-
+        # Send the message MULTICAST_STREAM to the requesting node
+        response_msg = f"MULTICAST_STREAM;;{content_name}"
+        request_socket.send(response_msg.encode())
         time.sleep(1)
-        while True:
-            data, addr = rtsp_socket.recvfrom(20480)
-            if data:
-                data_copy = copy.copy(data)  # Create a shallow copy of the received data
-                request_socket.send(data_copy)
-
-            if not data:
-                self.streaming_content.pop(content_name)
-                # Close the socket  
-                rtsp_socket.close()
-                request_socket.close()
-                print("Exiting")
-                break
+        # Simply add the requesting node to the list of nodes requesting the content
+        self.nodes_requesting_content[content_name].append(request_socket)
             
 
     def handle_multicast(self, content_name, request_socket):
@@ -213,13 +200,17 @@ class NodeRP:
         request_socket.send(response_msg.encode())
         print(f"Sent MULTICAST_STREAM response to the node for the content: {content_name}")
         
+        self.nodes_requesting_content[content_name] = [request_socket]
+
         time.sleep(1)
         # Start the loop to receive RTP packets from the server and send them to the multicast group for each NIC
         while True:
             data, addr = rtsp_socket.recvfrom(20480)
             if data:
-                
-                request_socket.send(data)
+                for node in self.nodes_requesting_content[content_name]:
+                    node.send(data[:])
+                # data.copy()
+                # request_socket.send(data)
 
                 # Verificar integridade dos dados
                 # rtp_packet = RtpPacket()
