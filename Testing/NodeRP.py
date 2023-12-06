@@ -61,10 +61,6 @@ class NodeRP:
                 print(f"Closed socket for server {server}.")
 
 
-
-        ## TEMORARILY ADD CONTENT TO THE CONTENT LIST MANUALLY
-        # self.content["localhost:6000"] = ["movie1.Mjpg"]
-
         # MAIN LISTEN LOOP
         # Cria uma nova thread para cada requesição
         while True:
@@ -139,20 +135,21 @@ class NodeRP:
         if request_type == "CONTENT_REQUEST":
             content_name = request.split(";;")[1]
             self.content_request(request_socket, content_name)
-            print(f"Sent CONTENT_REQUEST to the server for the content: {content_name}")
-
-
 
 
 
     def content_request(self, request_socket, content_name):
         # 1. Check if there already exists a multicast group for the content
         if content_name in self.streaming_content:
+            print(f"Content {content_name} is already being streamed.")
             # 1.1. If there is, redirect the requesting node to the multicast group
             self.redirect_multicast(request_socket, content_name)
+            
         
         else:
+            print(f"Sent CONTENT_REQUEST to the server for the content: {content_name}")
             self.handle_multicast(content_name, request_socket) # Eventualmente temos que passar a request_socket para esta funcao responder ao pedinte
+
 
     def redirect_multicast(self, request_socket, content_name):
         # Send the message MULTICAST_STREAM to the requesting node

@@ -9,6 +9,7 @@ class Node:
     neighbours = [] #(address:port)
     ip_rp = ""
     streaming_content = {} # (content_name, receiving_socket)
+    nodes_requesting_content = {} # {content_name: [requesting_node_socket]}
     rp_neighbour = False
     path_to_rp = [] # (address:port) (Esta porta tem que ser a porta listening do node aka a porta na lista de neighbours)
     
@@ -147,57 +148,58 @@ class Node:
             self.send_request_to_neighbour(content_name, requesting_node_socket, connected_neighbour) 
 
 
-    def redirect_current_streaming_content(self, requesting_address, content_name):
-        receiving_socket = self.streaming_content[content_name]
-        while True:
-            data = receiving_socket.recv(2048)
-            if not data:
-                break
-            requesting_address.sendall(data)
-
+    def redirect_multicast(self, request_socket, content_name):
+        # Send the message MULTICAST_STREAM to the requesting node
+        response_msg = f"MULTICAST_STREAM;;{content_name}"
+        request_socket.send(response_msg.encode())
+        time.sleep(1)
+        # Simply add the requesting node to the list of nodes requesting the content
+        self.nodes_requesting_content[content_name].append(request_socket)
+            
 
 
     def send_request_to_rp(self, content_name, requesting_socket):
         # Create a socket to connect to the RPNode
-        client_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        node_to_rp_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 
         # Connect to the RPNode
-        client_socket.connect((self.ip_rp, 5000))
+        node_to_rp_socket.connect((self.ip_rp, 5000))
 
         # Send a CONTENT_REQUEST
         request_msg = f"CONTENT_REQUEST;;{content_name}"
-        client_socket.send(request_msg.encode())
+        node_to_rp_socket.send(request_msg.encode())
         print(f"Sent CONTENT_REQUEST to the RPNode at {self.ip_rp}:{5000} for content: {content_name}")
 
         # Receive the response from the RPNode
-        new_port = client_socket.recv(1024).decode()
+        new_port = node_to_rp_socket.recv(1024).decode()
         print(f"Received response from the RPNode: {new_port}")
 
         # Close the initial socket
-        client_socket.close()
+        node_to_rp_socket.close()
 
         time.sleep(2)
 
         # Connect to the new NodeRP port to get the stream
-        new_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        receiving_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         print("connecting to the new port " + new_port)
-        new_socket.connect((self.ip_rp, int(new_port)))
+        receiving_socket.connect((self.ip_rp, int(new_port)))
         time.sleep(1)
 
         print("waiting for response")
         while True:
-            response_bytes = new_socket.recv(1024)
+            response_bytes = receiving_socket.recv(1024)
             response = response_bytes.decode()
             print(f"Received response from the RPNode: {response}")
             if response.startswith("MULTICAST_STREAM"):
-                self.streaming_content[content_name] = new_socket
-                self.receive_stream(requesting_socket, new_socket)
+                self.streaming_content[content_name] = receiving_socket
+                self.nodes_requesting_content[content_name] = [requesting_socket]
+                self.receive_stream(requesting_socket, receiving_socket)
             else:
                 print("content not found")
                 break
                 
         print("Exited the loop")  # Add this line to check if the loop is exited
-        new_socket.close()  # Close the new_socket after exiting the loop
+        receiving_socket.close()  # Close the new_socket after exiting the loop
 
 
     def receive_stream(self, requesting_address, receiving_socket):
