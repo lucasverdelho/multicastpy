@@ -131,7 +131,7 @@ class Node:
         # 1. Check if the node is currently streaming the content
         if content_name in self.streaming_content:
             print("Node has the content")
-            self.redirect_current_streaming_content(requesting_node_address, requesting_node_socket, content_name)
+            self.redirect_multicast(requesting_node_socket, content_name)
 
         # 2. If not, check if we are connected to the RP
         elif self.rp_neighbour:
@@ -153,6 +153,7 @@ class Node:
         response_msg = f"MULTICAST_STREAM;;{content_name}"
         request_socket.send(response_msg.encode())
         time.sleep(1)
+        print(f"Already streaming {content_name}, redirecting content to the requesting node")
         # Simply add the requesting node to the list of nodes requesting the content
         self.nodes_requesting_content[content_name].append(request_socket)
             
@@ -193,7 +194,7 @@ class Node:
             if response.startswith("MULTICAST_STREAM"):
                 self.streaming_content[content_name] = receiving_socket
                 self.nodes_requesting_content[content_name] = [requesting_socket]
-                self.receive_stream(requesting_socket, receiving_socket)
+                self.receive_stream(receiving_socket, content_name)
             else:
                 print("content not found")
                 break
@@ -202,11 +203,21 @@ class Node:
         receiving_socket.close()  # Close the new_socket after exiting the loop
 
 
-    def receive_stream(self, requesting_address, receiving_socket):
+    def receive_stream(self, receiving_socket, content_name):
         # Receive each packet of data from the server and redirect it to the requesting node
         while True:
             data, addr = receiving_socket.recvfrom(20480)
-            requesting_address.send(data)
+            if data:
+                for node in self.nodes_requesting_content[content_name]:
+                    node.send(data[:])
+            if not data:
+                self.streaming_content.pop(content_name)
+                # Close the socket  
+                receiving_socket.close()
+                print("Exiting")
+                break
+
+
         
 
     def send_request_to_neighbour(self, content_name, requesting_socket, connected_neighbour):

@@ -116,6 +116,10 @@ sleep 2
 # Open terminal for Node 14 - n14 ( TEST CLIENT REQUEST DIRECTLY TO NODERP)
 xterm -T "Client N14" -geometry 80x24+1400+800 -e "vcmd -c '/tmp/pycore.${PROCESS_ID}/n14' -- bash -c 'python3 connect_to_node.py 10.0.5.1'; exec bash" &
 
+sleep 10
+
+# Open terminal for Node 12 - n12 ( TEST CLIENT REQUEST )
+xterm -T "Client N12" -geometry 80x24+800+800 -e "vcmd -c '/tmp/pycore.${PROCESS_ID}/n13' -- bash -c 'python3 connect_to_node.py 10.0.1.1'; exec bash" &
 
 
 # Open terminal for n14 using xterm
