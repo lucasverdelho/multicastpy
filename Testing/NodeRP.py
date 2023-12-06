@@ -219,16 +219,15 @@ class NodeRP:
             # Append the multicast socket to the list
             multicast_sockets.append(multicast_socket)
 
-        # Send Multicast IP and Port to the requesting node for each NIC
-        for multicast_socket in multicast_sockets:
-            response_msg = f"MULTICAST_STREAM;;{multicast_group_base};;{multicast_port}"
-            
-            # Send the response to the requesting node
-            request_socket.send(response_msg.encode())
-            print(f"Sent MULTICAST_STREAM address to the requesting node for content: {content_name}")
-            
-            # Close the requesting socket
-            request_socket.close()
+        # Send the multicast group address to the node that requested the content
+        response_msg = f"MULTICAST_STREAM;;{multicast_group_base};;{multicast_port}"
+        
+        # Send the response to the requesting node
+        request_socket.send(response_msg.encode())
+        print(f"Sent MULTICAST_STREAM address to the requesting node for content: {content_name}")
+        
+        # Close the requesting socket
+        request_socket.close()
 
         # Start the loop to receive RTP packets from the server and send them to the multicast group for each NIC
         while True:
@@ -241,6 +240,7 @@ class NodeRP:
                 rtp_packet.decode(data)
 
                 curr_frame_nbr = rtp_packet.seqNum()
+                print("Current Seq Num: " + str(curr_frame_nbr))
                 # Implement logic to store or display the received video frames
 
 
