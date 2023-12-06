@@ -94,7 +94,7 @@ class Node:
         
         receiving_socket.listen(1)  # Make the socket a listening socket with a backlog of 1 connection
         
-        client_socket, client_address = receiving_socket.accept() 
+        requesting_node_socket, requesting_node_address = receiving_socket.accept() 
 
 
         # 1. Check the request type
@@ -102,18 +102,18 @@ class Node:
 
         if request_type == "CONTENT_REQUEST":
             content_name = request.split(";;")[1]
-            self.client_request(requesting_address, receiving_socket, content_name)
+            self.client_request(requesting_node_address, requesting_node_socket, content_name)
 
         # A logica aqui nao esta bem, isto nao funciona em casos de maior profundidade
         elif request_type == "LOCATE_RP":
-            connected_neighbour = self.locate_rp(requesting_address, receiving_socket)
-            receiving_socket.send(connected_neighbour.encode())
+            connected_neighbour = self.locate_rp(requesting_node_address, requesting_node_socket)
+            requesting_node_socket.send(connected_neighbour.encode())
 
         elif request_type == "REDIRECT_STREAM":
-            self.redirect_stream(requesting_address, receiving_socket, request)
+            self.redirect_stream(requesting_node_address, requesting_node_socket, request)
 
         elif request_type == "REQUEST_STREAM":
-            self.request_stream(requesting_address, receiving_socket, request)
+            self.request_stream(requesting_node_address, requesting_node_socket, request)
 
         else:
             print(f"Invalid request: {request}")
@@ -124,29 +124,27 @@ class Node:
 
         
 
-
-
-    def client_request(self, requesting_address, receiving_socket, content_name):
-        print(f"Requesting content from {requesting_address}")
+    def client_request(self, requesting_node_address, requesting_node_socket, content_name):
+        print(f"Requesting content from {requesting_node_address}")
 
         # 1. Check if the node is currently streaming the content
         if content_name in self.streaming_content:
             print("Node has the content")
-            self.redirect_current_streaming_content(requesting_address, receiving_socket, content_name)
+            self.redirect_current_streaming_content(requesting_node_address, requesting_node_socket, content_name)
 
         # 2. If not, check if we are connected to the RP
         elif self.rp_neighbour:
             print("Node is connected to the RP")
             # 2.1. If so, send the request to the RP
-            self.send_request_to_rp(content_name, receiving_socket)
+            self.send_request_to_rp(content_name, requesting_node_socket)
 
         # 3. If not, locate the RP
         else:
             print("Node is not connected to the RP")
             # 3.1. Send a request to the neighbours to locate the RP
-            connected_neighbour = self.locate_rp(requesting_address, receiving_socket)
+            connected_neighbour = self.locate_rp(requesting_node_address, requesting_node_socket)
             # 3.2. Request the content from the RP through the connected neighbour
-            self.send_request_to_rp(content_name, receiving_socket, connected_neighbour) 
+            self.send_request_to_neighbour(content_name, requesting_node_socket, connected_neighbour) 
 
 
     def redirect_current_streaming_content(self, requesting_address, content_name):
@@ -180,82 +178,37 @@ class Node:
 
         time.sleep(2)
 
-        # Connect to the new port
+        # Connect to the new NodeRP port to get the stream
         new_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         print("connecting to the new port " + new_port)
         new_socket.connect((self.ip_rp, int(new_port)))
         time.sleep(1)
-        print("connecting to the new port " + new_port)
 
-        multicast_group_address = ''
-        multicast_group_port = 0
         print("waiting for response")
-
         while True:
             response_bytes = new_socket.recv(1024)
             response = response_bytes.decode()
-
+            print(f"Received response from the RPNode: {response}")
             if response.startswith("MULTICAST_STREAM"):
-                multicast_group_address = response.split(';;')[1]
-                multicast_group_port = response.split(';;')[2]
-                print(f"Received MULTICAST_STREAM from the RPNode at {self.ip_rp}:{new_port} for content: {content_name}")
-                print(f"Multicast group address: {multicast_group_address}")
-                print(f"Multicast group port: {multicast_group_port}")
-                self.get_multicast_stream(multicast_group_address, int(multicast_group_port),requesting_socket, content_name)
+                self.streaming_content[content_name] = new_socket
+                self.receive_stream(requesting_socket, new_socket)
+            else:
+                print("content not found")
                 break
-
-            print(f"Received data from the RPNode at {self.ip_rp}:{new_port}")
-            print(response)
-            time.sleep(1)
-
+                
         print("Exited the loop")  # Add this line to check if the loop is exited
         new_socket.close()  # Close the new_socket after exiting the loop
 
 
-    def get_multicast_stream(self, multicast_group_address, multicast_group_port, requesting_socket, content_name):
+    def receive_stream(self, requesting_address, receiving_socket):
+        # Receive each packet of data from the server and redirect it to the requesting node
+        while True:
+            data, addr = receiving_socket.recvfrom(20480)
+            requesting_address.send(data)
+        
 
-        print(f"Getting multicast stream from {multicast_group_address}:{multicast_group_port}")
-        # Create a UDP socket
-        client_socket = socket.socket(socket.AF_INET, socket.SOCK_DGRAM, socket.IPPROTO_UDP)
-
-        print(f"Binding to port {multicast_group_port}")
-        # Bind to any available port
-        client_socket.bind(('0.0.0.0', multicast_group_port))
-
-        # Save the socket to the streaming_content dictionary
-        print(f"Saving socket to streaming_content dictionary")
-        self.streaming_content[content_name] = client_socket
-
-        # Join the multicast group
-        group = socket.inet_aton(multicast_group_address)
-        mreq = struct.pack('4sL', group, socket.INADDR_ANY)
-        client_socket.setsockopt(socket.IPPROTO_IP, socket.IP_MULTICAST_IF, socket.inet_aton('10.0.6.1'))
-
-
-        print(f"Client joined multicast group: {multicast_group_address}:{multicast_group_port}")
-
-        try:
-            while True:
-                data, address = client_socket.recvfrom(20480)
-
-                # Print information about received data
-                print(f"Received data from {address}")
-                print(f"Data length: {len(data)}")
-                # print(f"Data: {data}")
-
-                # Send the data to the requesting socket
-                # requesting_socket.send(data)
-
-        except Exception as main_error:
-            print(f"Error in main loop: {main_error}")
-
-        finally:
-            client_socket.close()
-
-
-
-
-
+    def send_request_to_neighbour(self, content_name, requesting_socket, connected_neighbour):
+        pass
 
 
     # Vai construir um caminho de ips até ao RP
