@@ -200,22 +200,19 @@ class NodeRP:
         self.nodes_requesting_content[content_name] = [request_socket]
 
         time.sleep(1)
-        # Start the loop to receive RTP packets from the server and send them to the multicast group for each NIC
+        # Start the loop to receive RTP packets from the server
+        # and send them to the multicast group for each NIC
         while True:
             data, addr = rtsp_socket.recvfrom(20480)
             if data:
                 for node in self.nodes_requesting_content[content_name]:
                     node.send(data[:])
-                # data.copy()
-                # request_socket.send(data)
 
                 # Verificar integridade dos dados
                 # rtp_packet = RtpPacket()
                 # rtp_packet.decode(data)
-
                 # curr_frame_nbr = rtp_packet.seqNum()
                 # print("Current Seq Num: " + str(curr_frame_nbr))
-                # Implement logic to store or display the received video frames
 
             if not data:
                 self.streaming_content.pop(content_name)

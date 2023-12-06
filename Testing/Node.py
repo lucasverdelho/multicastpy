@@ -11,7 +11,7 @@ class Node:
     streaming_content = {} # (content_name, receiving_socket)
     nodes_requesting_content = {} # {content_name: [requesting_node_socket]}
     rp_neighbour = False
-    path_to_rp = [] # (address:port) (Esta porta tem que ser a porta listening do node aka a porta na lista de neighbours)
+    path_to_rp = [] # List of nodes in the path to the RP (IP Only, the port will always be 50000)
     
     def main(self):
         print("Starting Node...")
@@ -107,14 +107,10 @@ class Node:
 
         # A logica aqui nao esta bem, isto nao funciona em casos de maior profundidade
         elif request_type == "LOCATE_RP":
-            connected_neighbour = self.locate_rp(requesting_node_address, requesting_node_socket)
-            requesting_node_socket.send(connected_neighbour.encode())
+            self.locate_rp(requesting_node_socket, content_name, request)
 
-        elif request_type == "REDIRECT_STREAM":
-            self.redirect_stream(requesting_node_address, requesting_node_socket, request)
-
-        elif request_type == "REQUEST_STREAM":
-            self.request_stream(requesting_node_address, requesting_node_socket, request)
+        elif request_type == "REDIRECT_REQUEST":
+            self.redirect_request(requesting_node_socket, request)
 
         else:
             print(f"Invalid request: {request}")
@@ -124,7 +120,6 @@ class Node:
 
 
         
-
     def client_request(self, requesting_node_address, requesting_node_socket, content_name):
         print(f"Requesting content from {requesting_node_address}")
 
@@ -141,13 +136,15 @@ class Node:
 
         # 3. If not, locate the RP
         else:
-            print("Node is not connected to the RP")
-            # 3.1. Send a request to the neighbours to locate the RP
-            connected_neighbour = self.locate_rp(requesting_node_address, requesting_node_socket)
-            # 3.2. Request the content from the RP through the connected neighbour
-            self.send_request_to_neighbour(content_name, requesting_node_socket, connected_neighbour) 
+            # print("Node is not connected to the RP")
+            # # 3.1. Send a request to the neighbours to locate the RP
+            # self.locate_rp(requesting_node_address, requesting_node_socket)
+            # # 3.2. Request the content from the RP through the connected neighbour
+            # self.send_request_to_neighbour(content_name, requesting_node_socket, connected_neighbour) 
+            pass
 
 
+    # Stream already exists, redirect the requesting node to the multicast group
     def redirect_multicast(self, request_socket, content_name):
         # Send the message MULTICAST_STREAM to the requesting node
         response_msg = f"MULTICAST_STREAM;;{content_name}"
@@ -158,7 +155,7 @@ class Node:
         self.nodes_requesting_content[content_name].append(request_socket)
             
 
-
+    # Send a request to the RP to get a stream of the content
     def send_request_to_rp(self, content_name, requesting_socket):
         # Create a socket to connect to the RPNode
         node_to_rp_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
@@ -203,6 +200,7 @@ class Node:
         receiving_socket.close()  # Close the new_socket after exiting the loop
 
 
+    # Receive the stream from the RP and redirect it to the requesting node
     def receive_stream(self, receiving_socket, content_name):
         # Receive each packet of data from the server and redirect it to the requesting node
         while True:
@@ -218,39 +216,87 @@ class Node:
                 break
 
 
+
+    # Function to handle LOCATE_RP request for a single neighbour
+    def handle_neighbour(neighbour_ip, request, requesting_node_socket):
+        # Create a socket to connect to the neighbour
+        node_to_neighbour_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+
+        try:
+            # Connect to the neighbour
+            node_to_neighbour_socket.connect((neighbour_ip, 5000))
+
+            # Send the request to the neighbour
+            node_to_neighbour_socket.send(request.encode())
+            print(f"Sent LOCATE_RP request to the neighbour at {neighbour_ip}:{5000}")
+
+            # Receive the response from the neighbour
+            response = node_to_neighbour_socket.recv(1024).decode()
+            print(f"Received response from neighbour at {neighbour_ip}:{5000}: {response}")
+
+            # Process the response (you might want to add more logic here)
+            # For now, send the response to the requesting node
+            response_msg = f"PATH_TO_RP;;{response};;{self.ip_rp}"
+            requesting_node_socket.send(response_msg.encode())
+            print(f"Sent PATH_TO_RP response to the node for the content")
+
+        except socket.error as e:
+            print(f"Error connecting to neighbour at {neighbour_ip}:{5000}: {e}")
+
+        finally:
+            # Close the socket after sending/receiving the response
+            node_to_neighbour_socket.close()
+
+
+    # Send a request to the neighbours to locate the RP
+    # And handle the response from the neighbours
+    def locate_rp(self, requesting_node_socket, content_name, request):
         
-
-    def send_request_to_neighbour(self, content_name, requesting_socket, connected_neighbour):
-        pass
-
-
-    # Vai construir um caminho de ips até ao RP
-    # Quando receber uma resposta vai dar append do seu ip ao caminho e reencaminhar a resposta para o node anterior
-    def locate_rp(self, requesting_address, receiving_socket):
-        print(f"Locating RP from {requesting_address}")
-        # 1. Send a request to the neighbours to locate the RP
-        for neighbour in self.neighbours:
-            # 1.1. Create a new socket to send the request
-            neighbour_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-            neighbour_socket.connect(neighbour)
-            # 1.2. Send the request
-            neighbour_socket.send("LOCATE_RP".encode())
-            # 1.3. Close the socket
-            neighbour_socket.close()
-
+        # If we are neighbours with the RP, 
+        # send a PATH_TO_RP message to the 
+        # requesting node with the path to this node
+        separator = ";;"
+        request_path = request.split(separator, 1)[1]
+        if self.rp_neighbour:
+            # Send a PATH_TO_RP message to the requesting node with the path to this node
+            response_msg = f"PATH_TO_RP;;{request_path};;{self.ip_rp}"
+            requesting_node_socket.send(response_msg.encode())
+            print(f"Sent PATH_TO_RP response to the node for the content: {content_name}")
         
-        # 2. Receive Confirmation from one of the neighbours that they are connected to the RP
-        # 2.1. Receive the first neighbour address who responded 
-        receiving_socket.accept()
-        neighbour_address = socket.recv(1024).decode()
+        else:
+            # Send a LOCATE_RP request to the neighbours
+            # Append the IP of the node to which we will send the request to request 
+            print("Sending LOCATE_RP request to the neighbours")
+            for neighbour_ip in self.neighbours:
+                request += f";;{neighbour_ip}"
+                
+                # Send the request to the neighbour  
+                # Create a socket to connect to the neighbour
+                node_to_neighbour_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 
-        return neighbour_address
+                # Connect to the neighbour
+                node_to_neighbour_socket.connect((neighbour_ip, 5000))  
 
-            
+                # Send the request to the neighbour
+                node_to_neighbour_socket.send(request.encode())
+                print(f"Sent LOCATE_RP request to the neighbour at {neighbour_ip}:{5000}")
 
+                # Receive the response from the neighbour
+                response = node_to_neighbour_socket.recv(1024).decode()
+                print(f"Received response from neighbour at {neighbour_ip}:{5000}: {response}")
+
+                # Process the response (you might want to add more logic here)
+                # For now, let's break out of the loop after processing the first response
+                break
+
+                # Close the socket after sending/receiving the response
+            node_to_neighbour_socket.close()
 
     # Vai encaminhar os pacotes recebidos para o node seguinte no caminho recebido no pacote, acrescentando 1 ao contador de hops
-    def redirect_stream(self, requesting_address, socket, request):
+    def redirect_request(self, requesting_node_socket, request):
+        pass
+
+    def send_request_to_neighbour(self, content_name, requesting_socket, connected_neighbour):
         pass
 
     # Vai encaminhar o pedido para o node seguinte no caminho para o RP acrescentando 1 ao contador de hops
