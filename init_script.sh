@@ -82,24 +82,32 @@ vcmd -c "/tmp/pycore.${PROCESS_ID}/n7" -- bash -c "
 sleep 1
 
 
-# Open terminal for n17 using xterm
+# Open terminal for n17 using xterm ----- SERVER 1 -----
 xterm -geometry 80x24+0+0 -e "vcmd -c '/tmp/pycore.${PROCESS_ID}/n17' -- bash -c 'python3 Server.py 6000'; exec bash" &
 
-xterm -geometry 80x24+1400+0 -e "vcmd -c '/tmp/pycore.${PROCESS_ID}/n24' -- bash -c 'python3 Server.py 6000'; exec bash" &
+# xterm -geometry 80x24+1400+0 -e "vcmd -c '/tmp/pycore.${PROCESS_ID}/n24' -- bash -c 'python3 Server.py 6000'; exec bash" &
 
 sleep 1
 
-# Open terminal for n7 using xterm
+# Open terminal for n7 using xterm ----- NODERP -----
 xterm -geometry 80x24+400+0 -e "vcmd -c '/tmp/pycore.${PROCESS_ID}/n7' -- bash -c 'python3 NodeRP.py 5000'; exec bash" &
 
 sleep 1
 
-# Open terminal for n14 using xterm
-xterm -geometry 80x24+800+0 -e "vcmd -c '/tmp/pycore.${PROCESS_ID}/n14' -- bash -c 'python3 testNode.py 10.0.5.1 5000 movie.Mjpeg'; exec bash" &
 
-sleep 1
+xterm -geometry 80x24+800+0 -e "vcmd -c '/tmp/pycore.${PROCESS_ID}/n1' -- bash -c 'python3 Node.py 5000 1 10.0.7.2'; exec bash" &
 
-xterm -geometry 80x24+0+400 -e "vcmd -c '/tmp/pycore.${PROCESS_ID}/n14' -- bash -c 'python3 connect_to_testNode.py 127.0.0.1 7770'; exec bash" &
+sleep 2
+
+xterm -geometry 80x24+800+450 -e "vcmd -c '/tmp/pycore.${PROCESS_ID}/n13' -- bash -c 'python3 connect_to_testNode.py 10.0.1.1'; exec bash" &
+
+
+# # Open terminal for n14 using xterm
+# xterm -geometry 80x24+800+0 -e "vcmd -c '/tmp/pycore.${PROCESS_ID}/n14' -- bash -c 'python3 testNode.py 10.0.5.1 5000 movie.Mjpeg'; exec bash" &
+
+# sleep 1
+
+# xterm -geometry 80x24+0+400 -e "vcmd -c '/tmp/pycore.${PROCESS_ID}/n14' -- bash -c 'python3 connect_to_testNode.py 127.0.0.1 7770'; exec bash" &
 
 # sleep 6
 
