@@ -102,16 +102,20 @@ class Node:
         # 1. Check the request type
         request_type = request.split(";;")[0]
         content_name = request.split(";;")[1]
+        print(f"Request: {request}")
+
         if request_type == "CONTENT_REQUEST":
-            
             self.client_request(requesting_node_address, requesting_node_socket, content_name)
+
 
         # A logica aqui nao esta bem, isto nao funciona em casos de maior profundidade
         elif request_type == "LOCATE_RP":
             self.locate_rp(requesting_node_socket, content_name, request)
 
+
         elif request_type == "REDIRECT_REQUEST":
             self.redirect_request(requesting_node_socket, request)
+
 
         else:
             print(f"Invalid request: {request}")
@@ -220,11 +224,6 @@ class Node:
 
     # Function to handle LOCATE_RP request for a single neighbour
     def handle_neighbour(self, neighbour_ip, request, requesting_node_socket, response_path):
-        # Check if the neighbour's IP is already in the response path
-        if neighbour_ip in response_path:
-            print(f"Skipping neighbour {neighbour_ip} as it is already in the response path")
-            return
-
         # Create a socket to connect to the neighbour
         node_to_neighbour_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 
@@ -234,6 +233,20 @@ class Node:
         # Send the request to the neighbour
         node_to_neighbour_socket.send(request.encode())
         print(f"Sent LOCATE_RP request to the neighbour at {neighbour_ip}:{5000}")
+        
+        # Receive the response from the neighbour
+        new_port = node_to_neighbour_socket.recv(1024).decode()
+        print(f"Received response from the neighbour at {neighbour_ip}:{5000}: {new_port}")
+
+        # Close the socket after sending/receiving the response
+        node_to_neighbour_socket.close()
+
+        # Connect to the new port
+        new_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        print("connecting to the new port " + new_port)
+        new_socket.connect((neighbour_ip, int(new_port)))
+        time.sleep(1)
+        print("connecting to the new port " + new_port)
 
         # Receive the response from the neighbour
         response = node_to_neighbour_socket.recv(1024).decode()
@@ -253,8 +266,9 @@ class Node:
     def locate_rp(self, requesting_node_socket, content_name, request):
         separator = ";;"
         request_path = request.split(separator, 1)[1]
-
+        print(f"Request path: {request_path}")
         if self.rp_neighbour:
+            print("Node is connected to the RP")
             # Send a PATH_TO_RP message to the requesting node with the path to this node
             response_msg = f"PATH_TO_RP;;{request_path};;{self.ip_rp}"
             requesting_node_socket.send(response_msg.encode())
@@ -269,9 +283,14 @@ class Node:
                 futures = []
 
                 for neighbour_ip in self.neighbours:
-                    threaded_request = request + f";;{neighbour_ip}"
-                    future = executor.submit(self.handle_neighbour, neighbour_ip, threaded_request, requesting_node_socket, request_path)
-                    futures.append(future)
+                    if neighbour_ip in request_path:
+                        print(f"Skipping neighbour {neighbour_ip} as it is already in the response path")
+                        continue
+
+                    else:
+                        threaded_request = request + f";;{neighbour_ip}"
+                        future = executor.submit(self.handle_neighbour, neighbour_ip, threaded_request, requesting_node_socket, request_path)
+                        futures.append(future)
 
                 # Wait for the first thread to complete and get its result
                 for future in concurrent.futures.as_completed(futures):
