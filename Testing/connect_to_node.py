@@ -44,3 +44,4 @@ if __name__ == "__main__":
     while True:
         data, addr = new_socket.recvfrom(20480)
         print("Received data from server.")
+        print(data.decode())

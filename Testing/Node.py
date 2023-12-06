@@ -101,7 +101,7 @@ class Node:
         # 1. Check the request type
         request_type = request.split(";;")[0]
 
-        if request_type == "CLIENT_REQUEST":
+        if request_type == "CONTENT_REQUEST":
             content_name = request.split(";;")[1]
             self.client_request(requesting_address, receiving_socket, content_name)
 
@@ -215,13 +215,16 @@ class Node:
 
     def get_multicast_stream(self, multicast_group_address, multicast_group_port, requesting_socket, content_name):
 
+        print(f"Getting multicast stream from {multicast_group_address}:{multicast_group_port}")
         # Create a UDP socket
         client_socket = socket.socket(socket.AF_INET, socket.SOCK_DGRAM, socket.IPPROTO_UDP)
 
+        print(f"Binding to port {multicast_group_port}")
         # Bind to any available port
         client_socket.bind(('', multicast_group_port))
 
-
+        # Save the socket to the streaming_content dictionary
+        print(f"Saving socket to streaming_content dictionary")
         self.streaming_content[content_name] = client_socket
 
         # Join the multicast group

@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # Set the process ID
-PROCESS_ID="36271"
+PROCESS_ID="36725"
 
 # List of nodes for which you want to run vcmd commands
 NODES=("n1" "n2" "n3" "n4" "n5" "n6" "n7" "n8" "n9" "n10" "n11" "n12" "n13" "n14" "n15" "n16" "n17" "n18" "n24") 
@@ -32,7 +32,8 @@ for NODE in "${NODES[@]}"; do
                 cp ${SOURCE_FOLDER}/Testing/VideoStream.py .
                 cp ${SOURCE_FOLDER}/Testing/testClient.py .
                 cp ${SOURCE_FOLDER}/Testing/testNode.py .
-                cp ${SOURCE_FOLDER}/Testing/connect_to_testNode.py .
+                cp ${SOURCE_FOLDER}/Testing/connect_to_test_node.py .
+                cp ${SOURCE_FOLDER}/Testing/connect_to_node.py .
                 "
             ;;
         "n17"|"n24")
@@ -99,15 +100,15 @@ xterm -geometry 80x24+800+0 -e "vcmd -c '/tmp/pycore.${PROCESS_ID}/n1' -- bash -
 
 sleep 2
 
-xterm -geometry 80x24+800+450 -e "vcmd -c '/tmp/pycore.${PROCESS_ID}/n13' -- bash -c 'python3 connect_to_testNode.py 10.0.1.1'; exec bash" &
+xterm -geometry 80x24+800+450 -e "vcmd -c '/tmp/pycore.${PROCESS_ID}/n13' -- bash -c 'python3 connect_to_node.py 10.0.1.1'; exec bash" &
 
 
-# # Open terminal for n14 using xterm
+# Open terminal for n14 using xterm
 # xterm -geometry 80x24+800+0 -e "vcmd -c '/tmp/pycore.${PROCESS_ID}/n14' -- bash -c 'python3 testNode.py 10.0.5.1 5000 movie.Mjpeg'; exec bash" &
 
 # sleep 1
 
-# xterm -geometry 80x24+0+400 -e "vcmd -c '/tmp/pycore.${PROCESS_ID}/n14' -- bash -c 'python3 connect_to_testNode.py 127.0.0.1 7770'; exec bash" &
+# xterm -geometry 80x24+0+400 -e "vcmd -c '/tmp/pycore.${PROCESS_ID}/n14' -- bash -c 'python3 connect_to_test_node.py 127.0.0.1 7770'; exec bash" &
 
 # sleep 6
 
