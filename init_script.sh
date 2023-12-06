@@ -105,11 +105,11 @@ xterm -geometry 80x24+800+400 -e "vcmd -c '/tmp/pycore.${PROCESS_ID}/n13' -- bas
 sleep 6
 
 
-xterm -geometry 80x24+1400+0 -e "vcmd -c '/tmp/pycore.${PROCESS_ID}/n10' -- bash -c 'python3 Node.py 5000 1 10.0.7.2'; exec bash" &
+xterm -geometry 80x24+1400+0 -e "vcmd -c '/tmp/pycore.${PROCESS_ID}/n10' -- bash -c 'python3 Node.py 5000 10 10.0.8.1'; exec bash" &
 
 sleep 1
 
-xterm -geometry 80x24+1400+400 -e "vcmd -c '/tmp/pycore.${PROCESS_ID}/n16' -- bash -c 'python3 connect_to_node.py 10.0.1.1'; exec bash" &
+xterm -geometry 80x24+1400+400 -e "vcmd -c '/tmp/pycore.${PROCESS_ID}/n16' -- bash -c 'python3 connect_to_node.py 10.0.2.1'; exec bash" &
 
 sleep 6
 

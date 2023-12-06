@@ -5,6 +5,7 @@ import time
 import NodeRPWorker 
 from RtpPacket import RtpPacket
 import struct
+import copy
 
 class NodeRP:
 
@@ -155,18 +156,16 @@ class NodeRP:
     def redirect_multicast(self, request_socket, content_name):
         # Get the socket that is receiving the stream and send all the RTP packets to the requesting node
         rtsp_socket = self.streaming_content[content_name]
+        response = f"MULTICAST_STREAM;;{content_name}"
+        request_socket.send(response.encode())
+        print(f"Sent MULTICAST_STREAM response to the node for the content: {content_name}")
 
+        time.sleep(1)
         while True:
             data, addr = rtsp_socket.recvfrom(20480)
             if data:
-                request_socket.send(data)
-
-                rtp_packet = RtpPacket()
-                rtp_packet.decode(data)
-
-                curr_frame_nbr = rtp_packet.seqNum()
-                print("Current Seq Num: " + str(curr_frame_nbr))
-                # Implement logic to store or display the received video frames
+                data_copy = copy.copy(data)  # Create a shallow copy of the received data
+                request_socket.send(data_copy)
 
             if not data:
                 self.streaming_content.pop(content_name)
@@ -175,6 +174,7 @@ class NodeRP:
                 request_socket.close()
                 print("Exiting")
                 break
+            
 
     def handle_multicast(self, content_name, request_socket):
         # We need to create a new multicast for the content after 
@@ -221,11 +221,12 @@ class NodeRP:
                 
                 request_socket.send(data)
 
-                rtp_packet = RtpPacket()
-                rtp_packet.decode(data)
+                # Verificar integridade dos dados
+                # rtp_packet = RtpPacket()
+                # rtp_packet.decode(data)
 
-                curr_frame_nbr = rtp_packet.seqNum()
-                print("Current Seq Num: " + str(curr_frame_nbr))
+                # curr_frame_nbr = rtp_packet.seqNum()
+                # print("Current Seq Num: " + str(curr_frame_nbr))
                 # Implement logic to store or display the received video frames
 
             if not data:
