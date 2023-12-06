@@ -3,6 +3,7 @@ import threading
 import socket
 import time
 import struct
+import concurrent.futures
 
 class Node:
 
@@ -100,9 +101,9 @@ class Node:
 
         # 1. Check the request type
         request_type = request.split(";;")[0]
-
+        content_name = request.split(";;")[1]
         if request_type == "CONTENT_REQUEST":
-            content_name = request.split(";;")[1]
+            
             self.client_request(requesting_node_address, requesting_node_socket, content_name)
 
         # A logica aqui nao esta bem, isto nao funciona em casos de maior profundidade
@@ -218,79 +219,64 @@ class Node:
 
 
     # Function to handle LOCATE_RP request for a single neighbour
-    def handle_neighbour(neighbour_ip, request, requesting_node_socket):
+    def handle_neighbour(self, neighbour_ip, request, requesting_node_socket, response_path):
+        # Check if the neighbour's IP is already in the response path
+        if neighbour_ip in response_path:
+            print(f"Skipping neighbour {neighbour_ip} as it is already in the response path")
+            return
+
         # Create a socket to connect to the neighbour
         node_to_neighbour_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 
-        try:
-            # Connect to the neighbour
-            node_to_neighbour_socket.connect((neighbour_ip, 5000))
+        # Connect to the neighbour
+        node_to_neighbour_socket.connect((neighbour_ip, 5000))
 
-            # Send the request to the neighbour
-            node_to_neighbour_socket.send(request.encode())
-            print(f"Sent LOCATE_RP request to the neighbour at {neighbour_ip}:{5000}")
+        # Send the request to the neighbour
+        node_to_neighbour_socket.send(request.encode())
+        print(f"Sent LOCATE_RP request to the neighbour at {neighbour_ip}:{5000}")
 
-            # Receive the response from the neighbour
-            response = node_to_neighbour_socket.recv(1024).decode()
-            print(f"Received response from neighbour at {neighbour_ip}:{5000}: {response}")
+        # Receive the response from the neighbour
+        response = node_to_neighbour_socket.recv(1024).decode()
+        print(f"Received response from neighbour at {neighbour_ip}:{5000}: {response}")
 
-            # Process the response (you might want to add more logic here)
-            # For now, send the response to the requesting node
-            response_msg = f"PATH_TO_RP;;{response};;{self.ip_rp}"
-            requesting_node_socket.send(response_msg.encode())
-            print(f"Sent PATH_TO_RP response to the node for the content")
+        # Process the response (you might want to add more logic here)
+        # For now, send the response to the requesting node
+        response_msg = f"PATH_TO_RP;;{response};;{self.ip_rp}"
+        requesting_node_socket.send(response_msg.encode())
+        print(f"Sent PATH_TO_RP response to the node for the content")
 
-        except socket.error as e:
-            print(f"Error connecting to neighbour at {neighbour_ip}:{5000}: {e}")
-
-        finally:
-            # Close the socket after sending/receiving the response
-            node_to_neighbour_socket.close()
-
+        # Close the socket after sending/receiving the response
+        node_to_neighbour_socket.close()
 
     # Send a request to the neighbours to locate the RP
     # And handle the response from the neighbours
     def locate_rp(self, requesting_node_socket, content_name, request):
-        
-        # If we are neighbours with the RP, 
-        # send a PATH_TO_RP message to the 
-        # requesting node with the path to this node
         separator = ";;"
         request_path = request.split(separator, 1)[1]
+
         if self.rp_neighbour:
             # Send a PATH_TO_RP message to the requesting node with the path to this node
             response_msg = f"PATH_TO_RP;;{request_path};;{self.ip_rp}"
             requesting_node_socket.send(response_msg.encode())
             print(f"Sent PATH_TO_RP response to the node for the content: {content_name}")
-        
+
         else:
-            # Send a LOCATE_RP request to the neighbours
-            # Append the IP of the node to which we will send the request to request 
+            # Send a LOCATE_RP request to the neighbours using threads
             print("Sending LOCATE_RP request to the neighbours")
-            for neighbour_ip in self.neighbours:
-                request += f";;{neighbour_ip}"
-                
-                # Send the request to the neighbour  
-                # Create a socket to connect to the neighbour
-                node_to_neighbour_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 
-                # Connect to the neighbour
-                node_to_neighbour_socket.connect((neighbour_ip, 5000))  
+            # Use ThreadPoolExecutor to submit threads for each neighbour
+            with concurrent.futures.ThreadPoolExecutor() as executor:
+                futures = []
 
-                # Send the request to the neighbour
-                node_to_neighbour_socket.send(request.encode())
-                print(f"Sent LOCATE_RP request to the neighbour at {neighbour_ip}:{5000}")
+                for neighbour_ip in self.neighbours:
+                    threaded_request = request + f";;{neighbour_ip}"
+                    future = executor.submit(self.handle_neighbour, neighbour_ip, threaded_request, requesting_node_socket, request_path)
+                    futures.append(future)
 
-                # Receive the response from the neighbour
-                response = node_to_neighbour_socket.recv(1024).decode()
-                print(f"Received response from neighbour at {neighbour_ip}:{5000}: {response}")
-
-                # Process the response (you might want to add more logic here)
-                # For now, let's break out of the loop after processing the first response
-                break
-
-                # Close the socket after sending/receiving the response
-            node_to_neighbour_socket.close()
+                # Wait for the first thread to complete and get its result
+                for future in concurrent.futures.as_completed(futures):
+                    # Break after the first completed thread
+                    break
 
     # Vai encaminhar os pacotes recebidos para o node seguinte no caminho recebido no pacote, acrescentando 1 ao contador de hops
     def redirect_request(self, requesting_node_socket, request):

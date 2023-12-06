@@ -4,7 +4,7 @@
 PROCESS_ID="38751"
 
 # List of nodes for which you want to run vcmd commands
-NODES=("n1" "n2" "n3" "n4" "n5" "n6" "n7" "n8" "n9" "n10" "n11" "n12" "n13" "n14" "n15" "n16" "n17" "n18" "n24") 
+NODES=("n1" "n2" "n3" "n4" "n5" "n6" "n7" "n8" "n9" "n10" "n11" "n12" "n13" "n14" "n15" "n16" "n17" "n18" "n24" "n25" "n26") 
 
 # Source folder for file copies
 SOURCE_FOLDER="/home/core/multicastpy"
@@ -20,18 +20,19 @@ for NODE in "${NODES[@]}"; do
         cp ${SOURCE_FOLDER}/Testing/neighbour_lists/* .
         "
     case $NODE in
-        "n1"|"n2"|"n5"|"n10") 
+        "n1"|"n2"|"n5"|"n10"|"n25") 
             vcmd -c "/tmp/pycore.${PROCESS_ID}/${NODE}" -- bash -c "
                 cp ${SOURCE_FOLDER}/Testing/*.py .
                 "
             ;;
-        "n11"|"n12"|"n13"|"n14"|"n15"|"n16"|"n18")
+        "n11"|"n12"|"n13"|"n14"|"n15"|"n16"|"n18"|"n26")
             vcmd -c "/tmp/pycore.${PROCESS_ID}/${NODE}" -- bash -c "
                 cp ${SOURCE_FOLDER}/Testing/Client.py .
                 cp ${SOURCE_FOLDER}/Testing/RtpPacket.py .
                 cp ${SOURCE_FOLDER}/Testing/VideoStream.py .
                 cp ${SOURCE_FOLDER}/Testing/testClient.py .
                 cp ${SOURCE_FOLDER}/Testing/connect_to_node.py .
+                cp ${SOURCE_FOLDER}/Testing/test_locate_rp.py .
                 "
             ;;
         "n17"|"n24")
@@ -99,27 +100,33 @@ xterm -T "Node 1" -geometry 80x24+800+0 -e "vcmd -c '/tmp/pycore.${PROCESS_ID}/n
 
 sleep 1
 
-# Open terminal for Node 13 - n13 ( TEST CLIENT REQUEST )
-xterm -T "Client N13" -geometry 80x24+800+400 -e "vcmd -c '/tmp/pycore.${PROCESS_ID}/n13' -- bash -c 'python3 connect_to_node.py 10.0.1.1'; exec bash" &
-
-sleep 6
-
-# Open terminal for Node 10 - n10 
-xterm -T "Node 10" -geometry 80x24+1400+0 -e "vcmd -c '/tmp/pycore.${PROCESS_ID}/n10' -- bash -c 'python3 Node.py 5000 10 10.0.8.1'; exec bash" &
+# Open terminal for Node 26 - n26
+xterm -T "Node 26" -geometry 80x24+1200+0 -e "vcmd -c '/tmp/pycore.${PROCESS_ID}/n25' -- bash -c 'python3 Node.py 5000 25 10.0.7.2'; exec bash" &
 
 sleep 1
-# Open terminal for Node 16 - n16 ( TEST CLIENT REQUEST )
-xterm -T "Client N16" -geometry 80x24+1400+400 -e "vcmd -c '/tmp/pycore.${PROCESS_ID}/n16' -- bash -c 'python3 connect_to_node.py 10.0.2.1'; exec bash" &
+# Send a LOCATE_RP through a test_locate_rp
+xterm -T "TESTING LOCATE_RP" -geometry 80x24+1200+300 -e "vcmd -c '/tmp/pycore.${PROCESS_ID}/n26' -- bash -c 'python3 test_locate_rp.py 10.0.14.1'; exec bash " & 
+# # Open terminal for Node 13 - n13 ( TEST CLIENT REQUEST )
+# xterm -T "Client N13" -geometry 80x24+800+400 -e "vcmd -c '/tmp/pycore.${PROCESS_ID}/n13' -- bash -c 'python3 connect_to_node.py 10.0.1.1'; exec bash" &
 
-sleep 2
+# sleep 6
 
-# Open terminal for Node 14 - n14 ( TEST CLIENT REQUEST DIRECTLY TO NODERP)
-xterm -T "Client N14" -geometry 80x24+1400+800 -e "vcmd -c '/tmp/pycore.${PROCESS_ID}/n14' -- bash -c 'python3 connect_to_node.py 10.0.5.1'; exec bash" &
+# # Open terminal for Node 10 - n10 
+# xterm -T "Node 10" -geometry 80x24+1400+0 -e "vcmd -c '/tmp/pycore.${PROCESS_ID}/n10' -- bash -c 'python3 Node.py 5000 10 10.0.8.1'; exec bash" &
 
-sleep 10
+# sleep 1
+# # Open terminal for Node 16 - n16 ( TEST CLIENT REQUEST )
+# xterm -T "Client N16" -geometry 80x24+1400+400 -e "vcmd -c '/tmp/pycore.${PROCESS_ID}/n16' -- bash -c 'python3 connect_to_node.py 10.0.2.1'; exec bash" &
 
-# Open terminal for Node 12 - n12 ( TEST CLIENT REQUEST )
-xterm -T "Client N12" -geometry 80x24+800+800 -e "vcmd -c '/tmp/pycore.${PROCESS_ID}/n13' -- bash -c 'python3 connect_to_node.py 10.0.1.1'; exec bash" &
+# sleep 2
+
+# # Open terminal for Node 14 - n14 ( TEST CLIENT REQUEST DIRECTLY TO NODERP)
+# xterm -T "Client N14" -geometry 80x24+1400+800 -e "vcmd -c '/tmp/pycore.${PROCESS_ID}/n14' -- bash -c 'python3 connect_to_node.py 10.0.5.1'; exec bash" &
+
+# sleep 10
+
+# # Open terminal for Node 12 - n12 ( TEST CLIENT REQUEST )
+# xterm -T "Client N12" -geometry 80x24+800+800 -e "vcmd -c '/tmp/pycore.${PROCESS_ID}/n13' -- bash -c 'python3 connect_to_node.py 10.0.1.1'; exec bash" &
 
 
 # Open terminal for n14 using xterm
