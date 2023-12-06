@@ -65,7 +65,6 @@ class Node:
         filename = "node" + str(NODE_NUMBER) + ".txt"
         with open(filename) as f:
             for line in f:
-                print(line)
                 ip_address = line.strip()
                 if ip_address:
                     self.neighbours.append(ip_address)
@@ -221,7 +220,7 @@ class Node:
 
         print(f"Binding to port {multicast_group_port}")
         # Bind to any available port
-        client_socket.bind(('', multicast_group_port))
+        client_socket.bind(('0.0.0.0', multicast_group_port))
 
         # Save the socket to the streaming_content dictionary
         print(f"Saving socket to streaming_content dictionary")
@@ -230,7 +229,8 @@ class Node:
         # Join the multicast group
         group = socket.inet_aton(multicast_group_address)
         mreq = struct.pack('4sL', group, socket.INADDR_ANY)
-        client_socket.setsockopt(socket.IPPROTO_IP, socket.IP_ADD_MEMBERSHIP, mreq)
+        client_socket.setsockopt(socket.IPPROTO_IP, socket.IP_MULTICAST_IF, socket.inet_aton('10.0.6.1'))
+
 
         print(f"Client joined multicast group: {multicast_group_address}:{multicast_group_port}")
 
@@ -244,7 +244,7 @@ class Node:
                 # print(f"Data: {data}")
 
                 # Send the data to the requesting socket
-                requesting_socket.send(data)
+                # requesting_socket.send(data)
 
         except Exception as main_error:
             print(f"Error in main loop: {main_error}")

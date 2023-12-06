@@ -203,15 +203,16 @@ class NodeRP:
 
 
         # List of NICs to create sockets for
-        nic_addresses = ['10.0.7.2', '10.0.22.2', '10.0.11.2', '10.0.8.1', '10.0.5.1']
+        nic_addresses = ['10.0.7.2'] # , '10.0.22.2', '10.0.11.2', '10.0.5.1', '10.0.8.1']
 
         # Set up a multicast socket for each NIC
         multicast_sockets = []
         for nic_address in nic_addresses:
-            multicast_socket = socket.socket(family=socket.AF_INET, type=socket.SOCK_DGRAM, proto=socket.IPPROTO_UDP, fileno=None)
+            multicast_socket = socket.socket(family=socket.AF_INET, type=socket.SOCK_DGRAM, 
+                                             proto=socket.IPPROTO_UDP, fileno=None)
             
             # Set multicast TTL
-            multicast_socket.setsockopt(socket.IPPROTO_IP, socket.IP_MULTICAST_TTL, 5)
+            multicast_socket.setsockopt(socket.IPPROTO_IP, socket.IP_MULTICAST_TTL, 25)
             
             # Set multicast NIC
             multicast_socket.setsockopt(socket.IPPROTO_IP, socket.IP_MULTICAST_IF, socket.inet_aton(nic_address))

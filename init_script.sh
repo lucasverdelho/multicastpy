@@ -20,7 +20,7 @@ for NODE in "${NODES[@]}"; do
         cp ${SOURCE_FOLDER}/Testing/neighbour_lists/* .
         "
     case $NODE in
-        "n1"|"n2"|"n5"|"n10") # Overlay Nodes
+        "n1"|"n2"|"n5"|"n10"|"n3") # Overlay Nodes N3 NAo e node overlay apenas para teste
             vcmd -c "/tmp/pycore.${PROCESS_ID}/${NODE}" -- bash -c "
                 cp ${SOURCE_FOLDER}/Testing/*.py .
                 "
@@ -98,9 +98,11 @@ sleep 1
 
 xterm -geometry 80x24+800+0 -e "vcmd -c '/tmp/pycore.${PROCESS_ID}/n1' -- bash -c 'python3 Node.py 5000 1 10.0.7.2'; exec bash" &
 
-sleep 2
+sleep 1
 
 xterm -geometry 80x24+800+450 -e "vcmd -c '/tmp/pycore.${PROCESS_ID}/n13' -- bash -c 'python3 connect_to_node.py 10.0.1.1'; exec bash" &
+
+sleep 6
 
 
 # Open terminal for n14 using xterm
