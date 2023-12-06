@@ -131,43 +131,54 @@ class NodeRP:
         request_socket, server_address = handling_socket.accept()
         print(f"Accepted connection from the node: {server_address}")
 
-        message = f"ACKNOWLEDGED CONNECTION"
-        request_socket.send(message.encode())
-
         # 1. Check the request type
         request_type = request.split(";;")[0]
 
         if request_type == "CONTENT_REQUEST":
             content_name = request.split(";;")[1]
-            self.content_request(requesting_address, request_socket, content_name)
+            self.content_request(request_socket, content_name)
             print(f"Sent CONTENT_REQUEST to the server for the content: {content_name}")
 
 
 
 
 
-    def content_request(self, requesting_address, request_socket, content_name):
+    def content_request(self, request_socket, content_name):
         # 1. Check if there already exists a multicast group for the content
         if content_name in self.streaming_content:
             # 1.1. If there is, redirect the requesting node to the multicast group
-            self.redirect_to_multicast(requesting_address, request_socket, content_name)
+            self.redirect_multicast(request_socket, content_name)
         
         else:
             self.handle_multicast(content_name, request_socket) # Eventualmente temos que passar a request_socket para esta funcao responder ao pedinte
 
-    def redirect_to_multicast(self, requesting_address, request_socket, content_name):
-        # 1.1. If there is, redirect the requesting node to the multicast group
-        time.sleep(2)
-        multicast_group_address = self.streaming_content[content_name].split('-')[0]
-        multicast_group_port = self.streaming_content[content_name].split('-')[1]
-        response_msg = f"MULTICAST_STREAM;;{multicast_group_address};;{multicast_group_port}"
-        print(response_msg)
-        request_socket.send(response_msg.encode())
-        print(f"Sent MULTICAST_STREAM to the requesting node {requesting_address} for content: {content_name}")
+    def redirect_multicast(self, request_socket, content_name):
+        # Get the socket that is receiving the stream and send all the RTP packets to the requesting node
+        rtsp_socket = self.streaming_content[content_name]
 
+        while True:
+            data, addr = rtsp_socket.recvfrom(20480)
+            if data:
+                request_socket.send(data)
+
+                rtp_packet = RtpPacket()
+                rtp_packet.decode(data)
+
+                curr_frame_nbr = rtp_packet.seqNum()
+                print("Current Seq Num: " + str(curr_frame_nbr))
+                # Implement logic to store or display the received video frames
+
+            if not data:
+                self.streaming_content.pop(content_name)
+                # Close the socket  
+                rtsp_socket.close()
+                request_socket.close()
+                print("Exiting")
+                break
 
     def handle_multicast(self, content_name, request_socket):
-        # We need to create a new multicast group for the content after getting a unicast stream from the server to us of the content
+        # We need to create a new multicast for the content after 
+        # getting a unicast stream from the server to us of the content
         # Locate which server has the content
         server = self.find_server_with_content(content_name)
 
@@ -193,50 +204,23 @@ class NodeRP:
         rtsp_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         rtsp_socket.connect((server, new_server_port))
 
-        print('\nConnecting to server on port ' + str(new_server_port) + '...')
-
-        # Add the socket to the streaming_content dictionary with an index
-        multicast_group_base = '224.1.1.1'
-        multicast_port = 5000 + len(self.streaming_content) + 1
-        multicast_group_address = (multicast_group_base, multicast_port)
-        self.streaming_content[content_name] = multicast_group_address
-
-
-        # List of NICs to create sockets for
-        nic_addresses = ['10.0.7.2'] # , '10.0.22.2', '10.0.11.2', '10.0.5.1', '10.0.8.1']
-
-        # Set up a multicast socket for each NIC
-        multicast_sockets = []
-        for nic_address in nic_addresses:
-            multicast_socket = socket.socket(family=socket.AF_INET, type=socket.SOCK_DGRAM, 
-                                             proto=socket.IPPROTO_UDP, fileno=None)
-            
-            # Set multicast TTL
-            multicast_socket.setsockopt(socket.IPPROTO_IP, socket.IP_MULTICAST_TTL, 25)
-            
-            # Set multicast NIC
-            multicast_socket.setsockopt(socket.IPPROTO_IP, socket.IP_MULTICAST_IF, socket.inet_aton(nic_address))
-            
-            # Append the multicast socket to the list
-            multicast_sockets.append(multicast_socket)
-
+        # Add the socket that is receiving the stream to the streaming_content list
+        self.streaming_content[content_name] = rtsp_socket
         # Send the multicast group address to the node that requested the content
-        response_msg = f"MULTICAST_STREAM;;{multicast_group_base};;{multicast_port}"
+        response_msg = f"MULTICAST_STREAM;;{content_name}"
         
         # Send the response to the requesting node
         request_socket.send(response_msg.encode())
-        print(f"Sent MULTICAST_STREAM address to the requesting node for content: {content_name}")
+        print(f"Sent MULTICAST_STREAM response to the node for the content: {content_name}")
         
-        # Close the requesting socket
-        request_socket.close()
-
+        time.sleep(1)
         # Start the loop to receive RTP packets from the server and send them to the multicast group for each NIC
         while True:
             data, addr = rtsp_socket.recvfrom(20480)
             if data:
-                for multicast_socket in multicast_sockets:
-                    multicast_socket.sendto(data, (multicast_group_base, int(multicast_port)))
-                    
+                
+                request_socket.send(data)
+
                 rtp_packet = RtpPacket()
                 rtp_packet.decode(data)
 
@@ -244,16 +228,14 @@ class NodeRP:
                 print("Current Seq Num: " + str(curr_frame_nbr))
                 # Implement logic to store or display the received video frames
 
+            if not data:
+                self.streaming_content.pop(content_name)
+                # Close the socket  
+                rtsp_socket.close()
+                request_socket.close()
+                print("Exiting")
+                break
 
-
-
-
-    def generate_multicast_group(self):
-        # Generate a unique multicast group address for each stream
-        multicast_group_base = '224.1.1.1'  # You can choose a different base address if needed
-        return multicast_group_base
-
-    
 
 
     def find_server_with_content(self, content_name):
