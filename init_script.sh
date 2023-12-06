@@ -31,8 +31,6 @@ for NODE in "${NODES[@]}"; do
                 cp ${SOURCE_FOLDER}/Testing/RtpPacket.py .
                 cp ${SOURCE_FOLDER}/Testing/VideoStream.py .
                 cp ${SOURCE_FOLDER}/Testing/testClient.py .
-                cp ${SOURCE_FOLDER}/Testing/testNode.py .
-                cp ${SOURCE_FOLDER}/Testing/connect_to_test_node.py .
                 cp ${SOURCE_FOLDER}/Testing/connect_to_node.py .
                 "
             ;;
@@ -83,35 +81,41 @@ vcmd -c "/tmp/pycore.${PROCESS_ID}/n7" -- bash -c "
 sleep 1
 
 
-# Open terminal for n17 using xterm ----- SERVER 1 -----
-xterm -geometry 80x24+0+0 -e "vcmd -c '/tmp/pycore.${PROCESS_ID}/n17' -- bash -c 'python3 Server.py 6000'; exec bash" &
+# Open terminal for SERVER 1 - n17
+xterm -T "Server 1 N17" -geometry 80x24+0+0 -e "vcmd -c '/tmp/pycore.${PROCESS_ID}/n17' -- bash -c 'python3 Server.py 6000'; exec bash" &
 
+# Server 2
 # xterm -geometry 80x24+1400+0 -e "vcmd -c '/tmp/pycore.${PROCESS_ID}/n24' -- bash -c 'python3 Server.py 6000'; exec bash" &
 
 sleep 1
 
-# Open terminal for n7 using xterm ----- NODERP -----
-xterm -geometry 80x24+400+0 -e "vcmd -c '/tmp/pycore.${PROCESS_ID}/n7' -- bash -c 'python3 NodeRP.py 5000'; exec bash" &
+# Open terminal for NODERP - n7
+xterm -T "NodeRP N7" -geometry 80x24+400+0 -e "vcmd -c '/tmp/pycore.${PROCESS_ID}/n7' -- bash -c 'python3 NodeRP.py 5000'; exec bash" &
 
 sleep 1
 
-
-xterm -geometry 80x24+800+0 -e "vcmd -c '/tmp/pycore.${PROCESS_ID}/n1' -- bash -c 'python3 Node.py 5000 1 10.0.7.2'; exec bash" &
+# Open terminal for Node 1 - n1
+xterm -T "Node 1" -geometry 80x24+800+0 -e "vcmd -c '/tmp/pycore.${PROCESS_ID}/n1' -- bash -c 'python3 Node.py 5000 1 10.0.7.2'; exec bash" &
 
 sleep 1
 
-xterm -geometry 80x24+800+400 -e "vcmd -c '/tmp/pycore.${PROCESS_ID}/n13' -- bash -c 'python3 connect_to_node.py 10.0.1.1'; exec bash" &
+# Open terminal for Node 13 - n13 ( TEST CLIENT REQUEST )
+xterm -T "Client N13" -geometry 80x24+800+400 -e "vcmd -c '/tmp/pycore.${PROCESS_ID}/n13' -- bash -c 'python3 connect_to_node.py 10.0.1.1'; exec bash" &
 
 sleep 6
 
-
-xterm -geometry 80x24+1400+0 -e "vcmd -c '/tmp/pycore.${PROCESS_ID}/n10' -- bash -c 'python3 Node.py 5000 10 10.0.8.1'; exec bash" &
+# Open terminal for Node 10 - n10 
+xterm -T "Node 10" -geometry 80x24+1400+0 -e "vcmd -c '/tmp/pycore.${PROCESS_ID}/n10' -- bash -c 'python3 Node.py 5000 10 10.0.8.1'; exec bash" &
 
 sleep 1
+# Open terminal for Node 16 - n16 ( TEST CLIENT REQUEST )
+xterm -T "Client N16" -geometry 80x24+1400+400 -e "vcmd -c '/tmp/pycore.${PROCESS_ID}/n16' -- bash -c 'python3 connect_to_node.py 10.0.2.1'; exec bash" &
 
-xterm -geometry 80x24+1400+400 -e "vcmd -c '/tmp/pycore.${PROCESS_ID}/n16' -- bash -c 'python3 connect_to_node.py 10.0.2.1'; exec bash" &
+sleep 2
 
-sleep 6
+# Open terminal for Node 14 - n14 ( TEST CLIENT REQUEST DIRECTLY TO NODERP)
+xterm -T "Client N14" -geometry 80x24+1400+800 -e "vcmd -c '/tmp/pycore.${PROCESS_ID}/n14' -- bash -c 'python3 connect_to_node.py 10.0.5.1'; exec bash" &
+
 
 
 # Open terminal for n14 using xterm
