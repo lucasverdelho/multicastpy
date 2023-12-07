@@ -13,7 +13,7 @@ if __name__ == "__main__":
 		print("[Usage: ClientLauncher.py serverIp content_name]\n")	
 	
 
-
+	print(f"Connecting to {node_ip}:{5000} to request content: {content_name}")
 	client_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 	client_socket.connect((node_ip, 5000))
 
@@ -25,7 +25,7 @@ if __name__ == "__main__":
 	client_socket.close()
 
 	time.sleep(2)
-
+	print("Cnnectiong to the new port " + str(new_port))
 	node_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 	node_socket.connect((node_ip, new_port))
 
