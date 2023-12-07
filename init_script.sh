@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # Set the process ID
-PROCESS_ID="38751"
+PROCESS_ID="37767"
 
 # List of nodes for which you want to run vcmd commands
 NODES=("n1" "n2" "n3" "n4" "n5" "n6" "n7" "n8" "n9" "n10" "n11" "n12" "n13" "n14" "n15" "n16" "n17" "n18" "n24" "n25" "n26") 
@@ -31,6 +31,8 @@ for NODE in "${NODES[@]}"; do
                 cp ${SOURCE_FOLDER}/Testing/testClient.py .
                 cp ${SOURCE_FOLDER}/Testing/connect_to_node.py .
                 cp ${SOURCE_FOLDER}/Testing/test_locate_rp.py .
+                cp ${SOURCE_FOLDER}/Testing/ClientLauncher.py .
+                cp ${SOURCE_FOLDER}/Testing/Client.py .
                 "
             ;;
         "n17") # SERVER 1
@@ -90,6 +92,7 @@ vcmd -c "/tmp/pycore.${PROCESS_ID}/n7" -- bash -c "
     "
 sleep 1
 
+## SERVERS -------------------------------------------------------------------------------
 
 # Open terminal for SERVER 1 - n17
 xterm -T "Server 1 N17" -geometry 80x24+0+0 -e "vcmd -c '/tmp/pycore.${PROCESS_ID}/n17' -- bash -c 'python3 Server.py 6000'; exec bash" &
@@ -100,50 +103,85 @@ xterm -T "Server 2 N24" -geometry 80x24+0+300 -e "vcmd -c '/tmp/pycore.${PROCESS
 #
 sleep 1
 
+
+## ----------------------------------------------------------------------------------------------------------------------------------------------------------------------
+## NODERP ---------------------------------------------------------------------------------------------------------------------------------------------------------------
+## ----------------------------------------------------------------------------------------------------------------------------------------------------------------------
+
 # Open terminal for NODERP - n7
 xterm -T "NodeRP N7" -geometry 80x24+400+0 -e "vcmd -c '/tmp/pycore.${PROCESS_ID}/n7' -- bash -c 'python3 NodeRP.py 5000'; exec bash" &
 
 sleep 1
+
+
+
+
+
+## ----------------------------------------------------------------------------------------------------------------------------------------------------------------------
+## NODES ---------------------------------------------------------------------------------------------------------------------------------------------------------------
+## ----------------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+
+
 
 # Open terminal for Node 1 - n1
 xterm -T "Node 1" -geometry 80x24+800+0 -e "vcmd -c '/tmp/pycore.${PROCESS_ID}/n1' -- bash -c 'python3 Node.py 5000 1 10.0.7.2'; exec bash" &
 
 sleep 1
 
-# # Open terminal for Node 26 - n26
-# xterm -T "Node 26" -geometry 80x24+1200+0 -e "vcmd -c '/tmp/pycore.${PROCESS_ID}/n25' -- bash -c 'python3 Node.py 5000 25 10.0.7.2'; exec bash" &
-
-# sleep 1
-# # Send a LOCATE_RP through a test_locate_rp
-# xterm -T "TESTING LOCATE_RP" -geometry 80x24+1200+300 -e "vcmd -c '/tmp/pycore.${PROCESS_ID}/n26' -- bash -c 'python3 test_locate_rp.py 10.0.14.1'; exec bash " & 
+# Open terminal for Node 10 - n10 
+xterm -T "Node 10" -geometry 80x24+1300+0 -e "vcmd -c '/tmp/pycore.${PROCESS_ID}/n10' -- bash -c 'python3 Node.py 5000 10 10.0.8.1'; exec bash" &
 
 
-# Open terminal for Node 13 - n13 ( TEST CLIENT REQUEST )
+
+
+
+
+## ----------------------------------------------------------------------------------------------------------------------------------------------------------------------
+## CLIENTS ---------------------------------------------------------------------------------------------------------------------------------------------------------------
+## ----------------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+
+
+# Open terminal for Node 13 - n13 ( TEST CLIENT REQUEST ) GUI NOT WORKING
+# This client connects to Node 1 and requests movie.Mjpeg
 xterm -T "Client N13" -geometry 80x24+800+400 -e "vcmd -c '/tmp/pycore.${PROCESS_ID}/n13' -- bash -c 'python3 testClient.py 10.0.1.1 movie.Mjpeg'; exec bash" &
 
 sleep 6
 
-# Open terminal for Node 10 - n10 
-xterm -T "Node 10" -geometry 80x24+1400+0 -e "vcmd -c '/tmp/pycore.${PROCESS_ID}/n10' -- bash -c 'python3 Node.py 5000 10 10.0.8.1'; exec bash" &
 
-sleep 1
+
+
 # Open terminal for Node 16 - n16 ( TEST CLIENT REQUEST )
-xterm -T "Client N16" -geometry 80x24+1400+400 -e "vcmd -c '/tmp/pycore.${PROCESS_ID}/n16' -- bash -c 'python3 connect_to_node.py 10.0.2.1'; exec bash" &
+# This client connects to Node 10 and Requests movie.Mjpeg
+xterm -T "Client N16" -geometry 80x24+1400+400 -e "vcmd -c '/tmp/pycore.${PROCESS_ID}/n16' -- bash -c 'python3 testClient.py 10.0.2.1 movie.Mjpeg'; exec bash" &
 
 sleep 2
 
+
+
+
+
 # Open terminal for Node 14 - n14 ( TEST CLIENT REQUEST DIRECTLY TO NODERP)
-xterm -T "Client N14" -geometry 80x24+1400+800 -e "vcmd -c '/tmp/pycore.${PROCESS_ID}/n14' -- bash -c 'python3 connect_to_node.py 10.0.5.1'; exec bash" &
+# This client connects directly to the RP and requests the movie.Mjpeg which should already be streaming 
+xterm -T "Client N14" -geometry 80x24+400+400 -e "vcmd -c '/tmp/pycore.${PROCESS_ID}/n14' -- bash -c 'python3 testClient.py 10.0.5.1 movie.Mjpeg'; exec bash" &
 
 sleep 10
 
+
+
+
+
 # Open terminal for Node 12 - n12 ( TEST CLIENT REQUEST )
-xterm -T "Client N12" -geometry 80x24+800+800 -e "vcmd -c '/tmp/pycore.${PROCESS_ID}/n13' -- bash -c 'python3 connect_to_node.py 10.0.1.1'; exec bash" &
+# This client connects to the Node 1 which should already be streaming and should be getting the stream from there
+xterm -T "Client N12" -geometry 80x24+800+800 -e "vcmd -c '/tmp/pycore.${PROCESS_ID}/n12' -- bash -c 'python3 testClient.py 10.0.1.1 movie.Mjpeg'; exec bash" &
 
 
-# sleep 5
 
-# xterm -e "vcmd -c '/tmp/pycore.${PROCESS_ID}/n14' -- bash -c 'python3 testClient.py'; exec bash" &
+
+sleep 5
+# This client connects directly to the RP and requests movie2.Mjpeg (which is in server2 and should not be streaming)
+xterm -T "Client N18" -geometry 80x24+800+800 -e "vcmd -c '/tmp/pycore.${PROCESS_ID}/n18' -- bash -c 'python3 testClient.py 10.0.5.1 movie2.Mjpeg'; exec bash" &
 
 # sleep 1
 

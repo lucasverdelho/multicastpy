@@ -46,11 +46,10 @@ def main():
     # Start the loop to receive RTP packets from the server and send them to the multicast group
     while True:
         data, addr = new_socket.recvfrom(20480)
-        print(data)
+        # print(data)
 
-        # # Print information about received data
-        # print(f"Received data from {address}")
-        # print(f"Data length: {len(data)}")
+        # Print information about received data
+        print(f"Data length: {len(data)}")
         # print(f"Data: {data}")
 
         # # Accumulate data in the buffer
