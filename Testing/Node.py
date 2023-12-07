@@ -212,7 +212,7 @@ class Node:
         while True:
             data, addr = receiving_socket.recvfrom(20480)
             if data:
-                print(f"Data length: {len(data)}")
+                # print(f"Data length: {len(data)}")
                 for node in self.nodes_requesting_content[content_name]:
                     node.send(data[:])
             if not data:
