@@ -30,7 +30,7 @@ class Client:
     def create_widgets(self):
         """Build GUI."""
         # Create a label to display the movie
-        self.label = Label(self.master, height=288)  # Adjusted height
+        self.label = Label(self.master, height=19)
         self.label.grid(row=0, column=0, columnspan=4, sticky=W + E + N + S, padx=5, pady=5)
 
     def listenRtp(self):
@@ -49,9 +49,9 @@ class Client:
                         curr_frame_nbr = rtp_packet.seqNum()
                         print("Current Seq Num: " + str(curr_frame_nbr))
 
-                        if curr_frame_nbr > self.frame_nbr:
-                            self.frame_nbr = curr_frame_nbr
-                            self.update_movie(self.writeFrame(rtp_packet.getPayload()))
+                        # if curr_frame_nbr > self.frame_nbr:
+                        self.frame_nbr = curr_frame_nbr
+                        self.update_movie(self.writeFrame(rtp_packet.getPayload()))
 
                     except:
                         time.sleep(0.05)
@@ -74,7 +74,6 @@ class Client:
 
     def update_movie(self, image_file):
         """Update the image file as a video frame in the GUI."""
-        new_photo = ImageTk.PhotoImage(Image.open(image_file))
-        self.label.configure(image=new_photo)
-        self.label.image = new_photo
-        self.photo = new_photo  # Keep a reference to prevent garbage collection
+        self.photo = ImageTk.PhotoImage(Image.open(image_file))
+        self.label.configure(image=self.photo, height=288)
+        self.label.image = self.photo
