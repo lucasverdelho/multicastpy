@@ -1,13 +1,19 @@
 import threading
 import socket
 import sys
+import time
+import NodeRPWorker 
+from RtpPacket import RtpPacket
+import struct
+import copy
 
 class NodeRP:
 
-    neighbours = []
-    serverIPs = []
-    content = {}
-    streaming_content = []
+    neighbours = [] # List of neighbouring nodes
+    serverIPs = [] # List of servers
+    content = {} # {server: [content_name]}
+    streaming_content = {} # {content_name: receiving_socket}
+    nodes_requesting_content = {} # {content_name: [requesting_node_socket]}
 
     def main(self):
         print("Starting RP Node")
@@ -21,42 +27,39 @@ class NodeRP:
 
         # 1. Create a permanent listening loop for the RTSP socket
         nodeServerSocket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-        nodeServerSocket.bind(('', NODE_PORT))
+        # Listen on all interfaces
+        nodeServerSocket.bind(('0.0.0.0', NODE_PORT)) 
         nodeServerSocket.listen(5)
 
-        # # Primeiro comunicar com os servidores e estabelecer os conteudos que cada um tem
-        # for server in self.serverIPs:
-        #     # Create a new socket for each server connection
-        #     server_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        # Primeiro comunicar com os servidores e estabelecer os conteudos que cada um tem
+        for server in self.serverIPs:
+            # Create a new socket for each server connection
+            server_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 
-        #     try:
-        #         # Connect to the server
-        #         server_socket.connect((server, 6000))
+            try:
+                # Connect to the server
+                server_socket.connect((server, 6000))
 
-        #         # Send a request to the server
-        #         request_msg = "CONTENT_INFO_REQUEST"
-        #         server_socket.send(request_msg.encode())
-        #         print(f"Sent CONTENT_INFO_REQUEST to the server {server}.")
+                # Send a request to the server
+                request_msg = "CONTENT_INFO_REQUEST"
+                server_socket.send(request_msg.encode())
+                print(f"Sent CONTENT_INFO_REQUEST to the server {server}.")
 
-        #         # Receive the content list from the server
-        #         response = server_socket.recv(1024).decode()
-        #         print(f"Received response from the server {server}: {response}")
+                # Receive the content list from the server
+                response = server_socket.recv(1024).decode()
+                print(f"Received response from the server {server}: {response}")
 
-        #         # Add the content to the content list
-        #         self.content[server] = response
+                # Add the content to the content list
+                self.content[server] = response
 
-        #     except Exception as e:
-        #         print(f"Error connecting to server {server}: {e}")
+            except Exception as e:
+                print(f"Error connecting to server {server}: {e}")
 
-        #     finally:
-        #         # Close the socket for this server connection
-        #         server_socket.close()
-        #         print(f"Closed socket for server {server}.")
+            finally:
+                # Close the socket for this server connection
+                server_socket.close()
+                print(f"Closed socket for server {server}.")
 
-
-
-        ## TEMORARILY ADD CONTENT TO THE CONTENT LIST MANUALLY
-        self.content["localhost:6000"] = ["movie1.Mjpg"]
 
         # MAIN LISTEN LOOP
         # Cria uma nova thread para cada requesição
@@ -74,10 +77,10 @@ class NodeRP:
             response_msg = f"{new_server_port}"
             requesting_socket.send(response_msg.encode())
 
-            # 4. Create a new thread to handle the request
-            threading.Thread(target=self.handle_request, args=(new_server_port, requesting_address, request)).start()
+            # Create a new thread to handle the request
+            threading.Thread(target=self.handle_request, args=(new_server_port, request)).start()
 
-            # 5. Close the socket
+            # Close the socket for this connection
             requesting_socket.close()
 
 
@@ -104,7 +107,7 @@ class NodeRP:
     def find_available_port(self):
         try:
             temp_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-            temp_socket.bind(('localhost', 0))  # Bind to an available port on localhost
+            temp_socket.bind(('0.0.0.0', 0))  # Bind to an available port on localhost
             temp_socket.listen(1)
             port = temp_socket.getsockname()[1]
             temp_socket.close()
@@ -113,84 +116,111 @@ class NodeRP:
             print("Error finding available port.")
             return None
 
- 
-
-    def handle_request(self, new_server_port, requesting_address, request):
-
+    
+    def handle_request(self, new_server_port, request):
+        # Create a new socket for each server connection
         handling_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-        handling_socket.connect(requesting_address, new_server_port)
+        # Listen on all interfaces
+        handling_socket.bind(('0.0.0.0', new_server_port))
+        handling_socket.listen(1)
+
+        print(handling_socket.getsockname())
+        # Accept the new connection from the node
+        request_socket, server_address = handling_socket.accept()
+        print(f"Accepted connection from the node: {server_address}")
 
         # 1. Check the request type
         request_type = request.split(";;")[0]
 
         if request_type == "CONTENT_REQUEST":
             content_name = request.split(";;")[1]
-            self.content_request(requesting_address, handling_socket, content_name)
+            self.content_request(request_socket, content_name)
+
+
+
+    def content_request(self, request_socket, content_name):
+        # 1. Check if there already exists a multicast group for the content
+        if content_name in self.streaming_content:
+            print(f"Content {content_name} is already being streamed.")
+            # 1.1. If there is, redirect the requesting node to the multicast group
+            self.redirect_multicast(request_socket, content_name)
+            
+        
+        else:
             print(f"Sent CONTENT_REQUEST to the server for the content: {content_name}")
+            self.handle_multicast(content_name, request_socket) # Eventualmente temos que passar a request_socket para esta funcao responder ao pedinte
 
 
+    def redirect_multicast(self, request_socket, content_name):
+        # Send the message MULTICAST_STREAM to the requesting node
+        response_msg = f"MULTICAST_STREAM;;{content_name}"
+        request_socket.send(response_msg.encode())
+        time.sleep(1)
+        # Simply add the requesting node to the list of nodes requesting the content
+        self.nodes_requesting_content[content_name].append(request_socket)
+            
 
-    def content_request(self, requesting_address, socket, content_name):
-        pass
-        # # 1. Check if there already exists a multicast group for the content
-        # if content_name in self.streaming_content:
-        #     # 1.1. If there is, redirect the requesting node to the multicast group
-        #     response_msg = f"REDIRECT_STREAM;;{content_name}"
-        #     socket.send(response_msg.encode())
-        #     print(f"Sent REDIRECT_STREAM to the requesting node {requesting_address} for content: {content_name}")
+    def handle_multicast(self, content_name, request_socket):
+        # We need to create a new multicast for the content after 
+        # getting a unicast stream from the server to us of the content
+        # Locate which server has the content
+        server = self.find_server_with_content(content_name)
 
-        # else:
-        #     # 1.2. If there isnt a multicast group for the content, 
-        #     # create one by sending a request to the correspondign server
-        #     # and redirect the requesting node to the multicast group
-        #     server = self.find_server_with_content(content_name)
-        #     if server is not None:
-        #         # Create a new socket for each server connection
-        #         server_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        server_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        server_socket.connect((server, 6000))
 
-        #         try:
-        #             # Connect to the server
-        #             server_socket.connect((server, 6000))
+        # Send a request to the server
+        request_msg = f"REQUEST_STREAM;;{content_name}"
+        server_socket.send(request_msg.encode())
 
-        #             # Send a request to the server
-        #             request_msg = f"REQUEST_STREAM;;{content_name}"
-        #             server_socket.send(request_msg.encode())
-        #             print(f"Sent REQUEST_STREAM to the server {server} for content: {content_name}")
+        # Receive the new port from the server
+        response = server_socket.recv(1024).decode()
+        print(f"Received response from the server: {response}")
 
-        #             # Receive the response from the server
-        #             response = server_socket.recv(1024).decode()
-        #             print(f"Received response from the server {server}: {response}")
+        # Split the response into server port
+        new_server_port = int(response)
 
-        #             # Redirect the requesting node to the multicast group
-        #             response_msg = f"REDIRECT_STREAM;;{content_name}"
-        #             socket.send(response_msg.encode())
-        #             print(f"Sent REDIRECT_STREAM to the requesting node {requesting_address} for content: {content_name}")
+        # Close the socket
+        server_socket.close()
 
-        #             # Add the content to the streaming content list
-        #             self.streaming_content.append(content_name)
+        time.sleep(2)
 
-        #         except Exception as e:
-        #             print(f"Error connecting to server {server}: {e}")
+        rtsp_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        rtsp_socket.connect((server, new_server_port))
 
-        #         finally:
-        #             # Close the socket for this server connection
-        #             server_socket.close()
-        #             print(f"Closed socket for server {server}.")
+        # Add the socket that is receiving the stream to the streaming_content list
+        self.streaming_content[content_name] = rtsp_socket
+        # Send the multicast group address to the node that requested the content
+        response_msg = f"MULTICAST_STREAM;;{content_name}"
+        
+        # Send the response to the requesting node
+        request_socket.send(response_msg.encode())
+        print(f"Sent MULTICAST_STREAM response to the node for the content: {content_name}")
+        
+        self.nodes_requesting_content[content_name] = [request_socket]
 
-        #     else:
-        #         # 1.3. If there isnt a server with the content, redirect the requesting node to the RP
-        #         response_msg = "LOCATE_RP"
-        #         socket.send(response_msg.encode())
-        #         print(f"Sent LOCATE_RP to the requesting node {requesting_address}")
+        time.sleep(1)
+        # Start the loop to receive RTP packets from the server
+        # and send them to the multicast group for each NIC
+        while True:
+            data, addr = rtsp_socket.recvfrom(20480)
+            if data:
+                for node in self.nodes_requesting_content[content_name]:
+                    node.send(data[:])
 
-        #         # Receive the response from the requesting node
-        #         response = socket.recv(1024).decode()
-        #         print(f"Received response from the requesting node {requesting_address}: {response}")
+                # Verificar integridade dos dados
+                # rtp_packet = RtpPacket()
+                # rtp_packet.decode(data)
+                # curr_frame_nbr = rtp_packet.seqNum()
+                # print("Current Seq Num: " + str(curr_frame_nbr))
 
-        #         # Redirect the requesting node to the RP
-        #         response_msg = f"REDIRECT_STREAM;;{content_name}"
-        #         socket.send(response_msg.encode())
-        #         print(f"Sent REDIRECT_STREAM to the requesting node {requesting_address} for content: {content_name}")
+            if not data:
+                self.streaming_content.pop(content_name)
+                # Close the socket  
+                rtsp_socket.close()
+                request_socket.close()
+                print("Exiting")
+                break
 
 
 
@@ -203,3 +233,6 @@ class NodeRP:
 
 if __name__ == "__main__":
     NodeRP().main()
+
+
+
