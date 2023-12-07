@@ -98,7 +98,7 @@ sleep 1
 xterm -T "Server 1 N17" -geometry 80x24+0+0 -e "vcmd -c '/tmp/pycore.${PROCESS_ID}/n17' -- bash -c 'python3 Server.py 6000'; exec bash" &
 
 # Open terminal for SERVER 1 - n24
-xterm -T "Server 2 N24" -geometry 80x24+0+300 -e "vcmd -c '/tmp/pycore.${PROCESS_ID}/n24' -- bash -c 'python3 Server.py 6000'; exec bash" &
+xterm -T "Server 2 N24" -geometry 80x24+0+400 -e "vcmd -c '/tmp/pycore.${PROCESS_ID}/n24' -- bash -c 'python3 Server.py 6000'; exec bash" &
 
 #
 sleep 1
@@ -109,7 +109,7 @@ sleep 1
 ## ----------------------------------------------------------------------------------------------------------------------------------------------------------------------
 
 # Open terminal for NODERP - n7
-xterm -T "NodeRP N7" -geometry 80x24+400+0 -e "vcmd -c '/tmp/pycore.${PROCESS_ID}/n7' -- bash -c 'python3 NodeRP.py 5000'; exec bash" &
+xterm -T "NodeRP N7" -geometry 80x24+500+0 -e "vcmd -c '/tmp/pycore.${PROCESS_ID}/n7' -- bash -c 'python3 NodeRP.py 5000'; exec bash" &
 
 sleep 1
 
@@ -125,12 +125,12 @@ sleep 1
 
 
 # Open terminal for Node 1 - n1
-xterm -T "Node 1" -geometry 80x24+800+0 -e "vcmd -c '/tmp/pycore.${PROCESS_ID}/n1' -- bash -c 'python3 Node.py 5000 1 10.0.7.2'; exec bash" &
+xterm -T "Node 1" -geometry 80x24+1000+0 -e "vcmd -c '/tmp/pycore.${PROCESS_ID}/n1' -- bash -c 'python3 Node.py 5000 1 10.0.7.2'; exec bash" &
 
 sleep 1
 
 # Open terminal for Node 10 - n10 
-xterm -T "Node 10" -geometry 80x24+1300+0 -e "vcmd -c '/tmp/pycore.${PROCESS_ID}/n10' -- bash -c 'python3 Node.py 5000 10 10.0.8.1'; exec bash" &
+xterm -T "Node 10" -geometry 80x24+1500+0 -e "vcmd -c '/tmp/pycore.${PROCESS_ID}/n10' -- bash -c 'python3 Node.py 5000 10 10.0.8.1'; exec bash" &
 
 
 
@@ -145,7 +145,7 @@ sleep 1
 
 # # Open terminal for Node 13 - n13 ( TEST CLIENT REQUEST ) GUI NOT WORKING
 # # This client connects to Node 1 and requests movie.Mjpeg
-xterm -T "Client N13" -geometry 80x24+800+400 -e "vcmd -c '/tmp/pycore.${PROCESS_ID}/n13' -- bash -c 'DISPLAY=:0.0 python3 ClientLauncher.py 10.0.1.1 movie.Mjpeg'; exec bash" &
+xterm -T "Client N13" -geometry 80x24+1000+400 -e "vcmd -c '/tmp/pycore.${PROCESS_ID}/n13' -- bash -c 'DISPLAY=:0.0 python3 ClientLauncher.py 10.0.1.1 movie.Mjpeg'; exec bash" &
 
 sleep 6
 
@@ -154,7 +154,7 @@ sleep 6
 
 # Open terminal for Node 16 - n16 ( TEST CLIENT REQUEST )
 # This client connects to Node 10 and Requests movie.Mjpeg
-xterm -T "Client N16" -geometry 80x24+1400+400 -e "vcmd -c '/tmp/pycore.${PROCESS_ID}/n16' -- bash -c 'python3 testClient.py 10.0.2.1 movie.Mjpeg'; exec bash" &
+xterm -T "Client N16" -geometry 80x24+1500+400 -e "vcmd -c '/tmp/pycore.${PROCESS_ID}/n16' -- bash -c 'DISPLAY=:0.0 python3 ClientLauncher.py 10.0.2.1 movie.Mjpeg'; exec bash" &
 
 sleep 2
 
@@ -162,26 +162,26 @@ sleep 2
 
 
 
-# # Open terminal for Node 14 - n14 ( TEST CLIENT REQUEST DIRECTLY TO NODERP)
-# # This client connects directly to the RP and requests the movie.Mjpeg which should already be streaming 
-# xterm -T "Client N14" -geometry 80x24+400+400 -e "vcmd -c '/tmp/pycore.${PROCESS_ID}/n14' -- bash -c 'python3 testClient.py 10.0.5.1 movie.Mjpeg'; exec bash" &
+# Open terminal for Node 14 - n14 ( TEST CLIENT REQUEST DIRECTLY TO NODERP)
+# This client connects directly to the RP and requests the movie.Mjpeg which should already be streaming 
+xterm -T "Client N14" -geometry 80x24+500+400 -e "vcmd -c '/tmp/pycore.${PROCESS_ID}/n14' -- bash -c 'DISPLAY=:0.0 python3 ClientLauncher.py 10.0.5.1 movie.Mjpeg'; exec bash" &
 
-# sleep 10
-
-
-
-
-
-# # Open terminal for Node 12 - n12 ( TEST CLIENT REQUEST )
-# # This client connects to the Node 1 which should already be streaming and should be getting the stream from there
-# xterm -T "Client N12" -geometry 80x24+800+800 -e "vcmd -c '/tmp/pycore.${PROCESS_ID}/n12' -- bash -c 'python3 testClient.py 10.0.1.1 movie.Mjpeg'; exec bash" &
+sleep 10
 
 
 
 
-# sleep 5
-# # This client connects directly to the RP and requests movie2.Mjpeg (which is in server2 and should not be streaming)
-# xterm -T "Client N18" -geometry 80x24+800+800 -e "vcmd -c '/tmp/pycore.${PROCESS_ID}/n18' -- bash -c 'python3 testClient.py 10.0.5.1 movie2.Mjpeg'; exec bash" &
+
+# Open terminal for Node 12 - n12 ( TEST CLIENT REQUEST )
+# This client connects to the Node 1 which should already be streaming and should be getting the stream from there
+xterm -T "Client N12" -geometry 80x24+1000+800 -e "vcmd -c '/tmp/pycore.${PROCESS_ID}/n12' -- bash -c 'DISPLAY=:0.0 python3 ClientLauncher.py 10.0.1.1 movie.Mjpeg'; exec bash" &
+
+
+
+
+sleep 5
+# This client connects directly to the RP and requests movie2.Mjpeg (which is in server2 and should not be streaming)
+xterm -T "Client N18" -geometry 80x24+500+800 -e "vcmd -c '/tmp/pycore.${PROCESS_ID}/n18' -- bash -c 'DISPLAY=:0.0 python3 ClientLauncher.py 10.0.5.1 movie2.Mjpeg'; exec bash" &
 
 
 
