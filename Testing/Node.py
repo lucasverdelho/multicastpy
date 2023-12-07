@@ -208,9 +208,11 @@ class Node:
     # Receive the stream from the RP and redirect it to the requesting node
     def receive_stream(self, receiving_socket, content_name):
         # Receive each packet of data from the server and redirect it to the requesting node
+        print("Streaming content to the requesting node")
         while True:
             data, addr = receiving_socket.recvfrom(20480)
             if data:
+                print(f"Data length: {len(data)}")
                 for node in self.nodes_requesting_content[content_name]:
                     node.send(data[:])
             if not data:
