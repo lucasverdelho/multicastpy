@@ -119,7 +119,7 @@ sleep 1
 
 
 # Open terminal for Node 13 - n13 ( TEST CLIENT REQUEST )
-xterm -T "Client N13" -geometry 80x24+800+400 -e "vcmd -c '/tmp/pycore.${PROCESS_ID}/n13' -- bash -c 'python3 connect_to_node.py 10.0.1.1'; exec bash" &
+xterm -T "Client N13" -geometry 80x24+800+400 -e "vcmd -c '/tmp/pycore.${PROCESS_ID}/n13' -- bash -c 'python3 testClient.py 10.0.1.1 movie.Mjpeg'; exec bash" &
 
 sleep 6
 

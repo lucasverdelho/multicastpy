@@ -2,78 +2,89 @@ import socket
 import struct
 # import cv2
 # import numpy as np
+import time
+import sys
 
 def main():
-    # Replace this value with the actual multicast group address and port in the format '224.1.1.1-5001'
-    multicast_group_address = '224.1.1.1-5001'
 
-    # Extract multicast group address and port from the combined string
-    multicast_group = multicast_group_address.split('-')[0]
-    multicast_port = int(multicast_group_address.split('-')[1])
+    if len(sys.argv) != 3:
+        print("Usage: testClient.py node_ip content_name")
+        sys.exit(1)
 
-    # Create a UDP socket
-    client_socket = socket.socket(socket.AF_INET, socket.SOCK_DGRAM, socket.IPPROTO_UDP)
+    node_ip = sys.argv[1]
+    content_name = sys.argv[2]
+    # Create a socket to connect to the RPNode
+    client_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 
-    # Bind to any available port
-    client_socket.bind(('', multicast_port))
+    # Connect to the RPNode
+    client_socket.connect((node_ip, 5000))
 
-    # Join the multicast group
-    group = socket.inet_aton(multicast_group)
-    mreq = struct.pack('4sL', group, socket.INADDR_ANY)
-    client_socket.setsockopt(socket.IPPROTO_IP, socket.IP_ADD_MEMBERSHIP, mreq)
+    # Send a CONTENT_REQUEST
+    request_msg = f"CONTENT_REQUEST;;{content_name}"
+    client_socket.send(request_msg.encode())
+    print(f"Sent CONTENT_REQUEST to the RPNode at {node_ip}:{5000} for content: {content_name}")
 
-    print(f"Client joined multicast group: {multicast_group}:{multicast_port}")
+    # Receive the response from the RPNode
+    new_port = client_socket.recv(1024).decode()
+    print(f"Received response from the RPNode: {new_port}")
 
-    # OpenCV window for displaying video
-    # cv2.namedWindow("Video Stream", cv2.WINDOW_NORMAL)
+    # Close the initial socket
+    client_socket.close()
 
-    # Buffer for accumulating data until a complete JPEG frame is received
-    data_buffer = b''
+    time.sleep(2)
 
-    try:
-        while True:
-            data, address = client_socket.recvfrom(20480)
+    # Connect to the new port
+    new_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+    print("connecting to the new port " + new_port)
+    new_socket.connect((node_ip, int(new_port)))
+    time.sleep(1)
+    print("connecting to the new port " + new_port)
 
-            # Print information about received data
-            print(f"Received data from {address}")
-            print(f"Data length: {len(data)}")
-            print(f"Data: {data}")
 
-            # # Accumulate data in the buffer
-            # data_buffer += data
+    print("Connected to server.")
 
-            # # Check for the JPEG frame boundaries
-            # if b'\xff\xd8' in data_buffer and b'\xff\xd9' in data_buffer:
-            #     # Find the start and end of the JPEG frame
-            #     frame_start = data_buffer.find(b'\xff\xd8')
-            #     frame_end = data_buffer.find(b'\xff\xd9') + 2
+    # Start the loop to receive RTP packets from the server and send them to the multicast group
+    while True:
+        data, addr = new_socket.recvfrom(20480)
+        print(data)
 
-            #     # Extract the JPEG frame
-            #     jpeg_frame = data_buffer[frame_start:frame_end]
+        # # Print information about received data
+        # print(f"Received data from {address}")
+        # print(f"Data length: {len(data)}")
+        # print(f"Data: {data}")
 
-            #     try:
-            #         # Decode the JPEG frame with OpenCV
-            #         frame = cv2.imdecode(np.frombuffer(jpeg_frame, dtype=np.uint8), cv2.IMREAD_COLOR)
+        # # Accumulate data in the buffer
+        # data_buffer += data
 
-            #         # Display the video frame
-            #         cv2.imshow("Video Stream", frame)
+        # # Check for the JPEG frame boundaries
+        # if b'\xff\xd8' in data_buffer and b'\xff\xd9' in data_buffer:
+        #     # Find the start and end of the JPEG frame
+        #     frame_start = data_buffer.find(b'\xff\xd8')
+        #     frame_end = data_buffer.find(b'\xff\xd9') + 2
 
-            #         # Reset the buffer after extracting a complete frame
-            #         data_buffer = data_buffer[frame_end:]
-            #     except Exception as decode_error:
-            #         print(f"Error decoding image: {decode_error}")
+        #     # Extract the JPEG frame
+        #     jpeg_frame = data_buffer[frame_start:frame_end]
 
-            # # Break the loop if 'q' key is pressed
-            # if cv2.waitKey(1) & 0xFF == ord('q'):
-            #     break
+        #     try:
+        #         # Decode the JPEG frame with OpenCV
+        #         frame = cv2.imdecode(np.frombuffer(jpeg_frame, dtype=np.uint8), cv2.IMREAD_COLOR)
 
-    except Exception as main_error:
-        print(f"Error in main loop: {main_error}")
+        #         # Display the video frame
+        #         cv2.imshow("Video Stream", frame)
 
-    finally:
-        # Release OpenCV window and close the socket
-        # cv2.destroyAllWindows()
-        client_socket.close()
+        #         # Reset the buffer after extracting a complete frame
+        #         data_buffer = data_buffer[frame_end:]
+        #     except Exception as decode_error:
+        #         print(f"Error decoding image: {decode_error}")
+
+        # # Break the loop if 'q' key is pressed
+        # if cv2.waitKey(1) & 0xFF == ord('q'):
+        #     break
+
+
+    # Release OpenCV window and close the socket
+    # cv2.destroyAllWindows()
+    client_socket.close()
 
 if __name__ == "__main__":
     main()
